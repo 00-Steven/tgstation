@@ -174,6 +174,8 @@
 	var/datum/supply_order/new_order = new(pack, name, rank, ckey, reason)
 	var/points_to_check
 	var/datum/bank_account/used_account = SSeconomy.get_dep_account(cargo_account)
+	if(isnull(used_account))
+		return
 	if(used_account)
 		points_to_check = used_account.account_balance
 
