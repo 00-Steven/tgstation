@@ -111,22 +111,22 @@
 
 /obj/machinery/computer/cargo/express/proc/packin_up() // oh shit, I'm sorry
 	meme_pack_data = list() // sorry for what?
-	for(var/pack in SSshuttle.supply_packs) // our quartermaster taught us not to be ashamed of our supply packs
-		var/datum/supply_pack/P = SSshuttle.supply_packs[pack]  // specially since they're such a good price and all
-		if(!meme_pack_data[P.group]) // yeah, I see that, your quartermaster gave you good advice
-			meme_pack_data[P.group] = list( // it gets cheaper when I return it
-				"name" = P.group, // mmhm
+	for(var/pack_id in SSshuttle.supply_packs) // our quartermaster taught us not to be ashamed of our supply packs
+		var/datum/supply_pack/pack = SSshuttle.supply_packs[pack_id]  // specially since they're such a good price and all
+		if(!meme_pack_data[pack.group]) // yeah, I see that, your quartermaster gave you good advice
+			meme_pack_data[pack.group] = list( // it gets cheaper when I return it
+				"name" = pack.group, // mmhm
 				"packs" = list()  // sometimes, I return it so much, I rip the manifest
 			) // see, my quartermaster taught me a few things too
-		if((P.hidden) || (P.special)) // like, how not to rip the manifest
+		if((pack.hidden) || (pack.special)) // like, how not to rip the manifest
 			continue// by using someone else's crate
-		if(P.contraband && !contraband) // will you show me?
+		if(pack.contraband && !contraband) // will you show me?
 			continue // i'd be right happy to
-		meme_pack_data[P.group]["packs"] += list(list(
-			"name" = P.name,
-			"cost" = P.get_cost(),
-			"id" = pack,
-			"desc" = P.desc || P.name // If there is a description, use it. Otherwise use the pack's name.
+		meme_pack_data[pack.group]["packs"] += list(list(
+			"name" = pack.name,
+			"cost" = pack.get_cost(),
+			"id" = pack_id,
+			"desc" = pack.desc || pack.name // If there is a description, use it. Otherwise use the pack's name.
 		))
 
 /// Called on ui_act, uses the cargo budget to print a supplypod beacon
