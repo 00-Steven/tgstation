@@ -160,9 +160,9 @@
 	var/rank = "*None Provided*"
 	var/ckey = usr.ckey
 	if(ishuman(usr))
-		var/mob/living/carbon/human/H = usr
-		name = H.get_authentification_name()
-		rank = H.get_assignment(hand_first = TRUE)
+		var/mob/living/carbon/human/human_user = usr
+		name = human_user.get_authentification_name()
+		rank = human_user.get_assignment(hand_first = TRUE)
 	else if(HAS_SILICON_ACCESS(usr))
 		name = usr.real_name
 		rank = "Silicon"
