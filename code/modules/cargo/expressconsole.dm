@@ -38,6 +38,9 @@
 	. = ..()
 	packin_up()
 
+/obj/machinery/computer/cargo/express/process(seconds_per_tick)
+	cooldown -= seconds_per_tick
+
 /obj/machinery/computer/cargo/express/Destroy()
 	if(beacon)
 		beacon.unlink_console()
@@ -175,8 +178,6 @@
 		packin_up()
 		stack_trace("There was no pack data for [src]")
 	data["supplies"] = meme_pack_data
-	if (cooldown > 0)//cooldown used for printing beacons
-		cooldown--
 	return data
 
 /obj/machinery/computer/cargo/express/ui_act(action, params, datum/tgui/ui)
