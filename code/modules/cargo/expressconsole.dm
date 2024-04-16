@@ -130,7 +130,7 @@
 		))
 
 /// Called on ui_act, uses the cargo budget to print a supplypod beacon
-/obj/machinery/computer/cargo/express/proc/print_beacon()
+/obj/machinery/computer/cargo/express/proc/print_beacon(mob/user)
 	var/datum/bank_account/used_account = SSeconomy.get_dep_account(cargo_account)
 	if(isnull(used_account))
 		return
@@ -143,12 +143,12 @@
 	COOLDOWN_START(src, cooldown, 10 SECONDS)
 	var/obj/item/supplypod_beacon/new_beacon = new /obj/item/supplypod_beacon(drop_location())
 	// Rather than in beacon's Initialize(), we can assign the computer to the beacon by reusing this proc
-	new_beacon.link_console(src, usr)
+	new_beacon.link_console(src, user)
 	// Printed_beacons starts at 0, so the first one out will be called beacon # 1
 	printed_beacons++ 
 	beacon.name = "Supply Pod Beacon #[printed_beacons]"
 
-/obj/machinery/computer/cargo/express/proc/attempt_order(var/id)
+/obj/machinery/computer/cargo/express/proc/attempt_order(mob/user, var/id)
 	if(TIMER_COOLDOWN_RUNNING(src, COOLDOWN_EXPRESSPOD_CONSOLE))
 		say("Railgun recalibrating. Stand by.")
 		return
@@ -158,13 +158,13 @@
 		CRASH("Unknown supply pack id given by express order console ui. ID: [id]")
 	var/name = "*None Provided*"
 	var/rank = "*None Provided*"
-	var/ckey = usr.ckey
-	if(ishuman(usr))
-		var/mob/living/carbon/human/human_user = usr
+	var/ckey = user.ckey
+	if(ishuman(user))
+		var/mob/living/carbon/human/human_user = user
 		name = human_user.get_authentification_name()
 		rank = human_user.get_assignment(hand_first = TRUE)
-	else if(HAS_SILICON_ACCESS(usr))
-		name = usr.real_name
+	else if(HAS_SILICON_ACCESS(user))
+		name = user.real_name
 		rank = "Silicon"
 	var/reason = ""
 	var/list/empty_turfs
@@ -274,6 +274,6 @@
 				beacon.update_status(SP_READY) //turns on the beacon's ready light
 		if("printBeacon")
 			if(COOLDOWN_FINISHED(src, cooldown)) // We do not trust the client to not try to print anyway.
-				print_beacon()
+				print_beacon(ui.user)
 		if("add") // Generate Supply Order first
-			attempt_order(params["id"])
+			attempt_order(ui.user, params["id"])
