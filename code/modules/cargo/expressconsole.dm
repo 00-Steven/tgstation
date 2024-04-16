@@ -126,6 +126,24 @@
 			"desc" = P.desc || P.name // If there is a description, use it. Otherwise use the pack's name.
 		))
 
+/// Called on ui_act, uses the cargo budget to print a supplypod beacon
+/obj/machinery/computer/cargo/express/proc/print_beacon()
+	var/datum/bank_account/used_account = SSeconomy.get_dep_account(cargo_account)
+	if(isnull(used_account))
+		return
+
+	if(!used_account.adjust_money(-BEACON_COST))
+		say("Insufficient funds to purchase beacon.")
+		return
+
+	cooldown = 10 //a ~ten second cooldown for printing beacons to prevent spam
+	var/obj/item/supplypod_beacon/new_beacon = new /obj/item/supplypod_beacon(drop_location())
+	// rather than in beacon's Initialize(), we can assign the computer to the beacon by reusing this proc)
+	new_beacon.link_console(src, usr)
+	// printed_beacons starts at 0, so the first one out will be called beacon # 1
+	printed_beacons++ 
+	beacon.name = "Supply Pod Beacon #[printed_beacons]"
+
 /obj/machinery/computer/cargo/express/ui_data(mob/user)
 	var/canBeacon = beacon && (isturf(beacon.loc) || ismob(beacon.loc))//is the beacon in a valid location?
 	var/list/data = list()
@@ -176,16 +194,7 @@
 			if(beacon)
 				beacon.update_status(SP_READY) //turns on the beacon's ready light
 		if("printBeacon")
-			var/datum/bank_account/D = SSeconomy.get_dep_account(cargo_account)
-			if(D)
-				if(D.adjust_money(-BEACON_COST))
-					cooldown = 10//a ~ten second cooldown for printing beacons to prevent spam
-					var/obj/item/supplypod_beacon/C = new /obj/item/supplypod_beacon(drop_location())
-					C.link_console(src, usr)//rather than in beacon's Initialize(), we can assign the computer to the beacon by reusing this proc)
-					printed_beacons++//printed_beacons starts at 0, so the first one out will be called beacon # 1
-					beacon.name = "Supply Pod Beacon #[printed_beacons]"
-
-
+			print_beacon()
 		if("add")//Generate Supply Order first
 			if(TIMER_COOLDOWN_RUNNING(src, COOLDOWN_EXPRESSPOD_CONSOLE))
 				say("Railgun recalibrating. Stand by.")
