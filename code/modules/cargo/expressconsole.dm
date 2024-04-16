@@ -177,6 +177,11 @@
 	var/emagged = obj_flags & EMAGGED
 	var/pack_cost = new_order.pack.get_cost() * (emagged ? 0.72 * MAX_EMAG_ROCKETS) // bulk discount :^)
 
+	if(pack_cost <= points_to_check)
+		playsound(src, 'sound/machines/buzz-sigh.ogg', 50, FALSE)
+		say("ERROR: Insufficient funds.")
+		return
+
 	if(!(obj_flags & EMAGGED))
 		if(pack_cost <= points_to_check)
 			var/LZ
