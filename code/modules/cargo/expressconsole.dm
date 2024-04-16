@@ -173,8 +173,12 @@
 	var/datum/bank_account/used_account = SSeconomy.get_dep_account(cargo_account)
 	if(used_account)
 		points_to_check = used_account.account_balance
+
+	var/emagged = obj_flags & EMAGGED
+	var/pack_cost = new_order.pack.get_cost() * (emagged ? 0.72 * MAX_EMAG_ROCKETS) // bulk discount :^)
+
 	if(!(obj_flags & EMAGGED))
-		if(new_order.pack.get_cost() <= points_to_check)
+		if(pack_cost <= points_to_check)
 			var/LZ
 			if (istype(beacon) && usingBeacon)//prioritize beacons over landing in cargobay
 				LZ = get_turf(beacon)
@@ -191,9 +195,9 @@
 					CHECK_TICK
 				if(empty_turfs?.len)
 					LZ = pick(empty_turfs)
-			if (new_order.pack.get_cost() <= points_to_check && LZ)//we need to call the cost check again because of the CHECK_TICK call
+			if (pack_cost <= points_to_check && LZ)//we need to call the cost check again because of the CHECK_TICK call
 				TIMER_COOLDOWN_START(src, COOLDOWN_EXPRESSPOD_CONSOLE, 5 SECONDS)
-				used_account.adjust_money(-new_order.pack.get_cost())
+				used_account.adjust_money(-pack_cost)
 				if(pack.special_pod)
 					new /obj/effect/pod_landingzone(LZ, pack.special_pod, new_order)
 				else
@@ -201,7 +205,7 @@
 				. = TRUE
 				update_appearance()
 	else
-		if(new_order.pack.get_cost() * (0.72*MAX_EMAG_ROCKETS) <= points_to_check) // bulk discount :^)
+		if(pack_cost <= points_to_check)
 			landingzone = GLOB.areas_by_type[pick(GLOB.the_station_areas)]  //override default landing zone
 			for(var/turf/open/floor/T in landingzone.get_turfs_from_all_zlevels())
 				if(T.is_blocked_turf())
@@ -210,7 +214,7 @@
 				CHECK_TICK
 			if(empty_turfs?.len)
 				TIMER_COOLDOWN_START(src, COOLDOWN_EXPRESSPOD_CONSOLE, 10 SECONDS)
-				used_account.adjust_money(-(new_order.pack.get_cost() * (0.72*MAX_EMAG_ROCKETS)))
+				used_account.adjust_money(-pack_cost)
 
 				new_order.generateRequisition(get_turf(src))
 				for(var/i in 1 to MAX_EMAG_ROCKETS)
