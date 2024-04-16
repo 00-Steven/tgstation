@@ -119,7 +119,7 @@
 				"packs" = list()  // sometimes, I return it so much, I rip the manifest
 			) // see, my quartermaster taught me a few things too
 		if((pack.hidden) || (pack.special)) // like, how not to rip the manifest
-			continue// by using someone else's crate
+			continue // by using someone else's crate
 		if(pack.contraband && !contraband) // will you show me?
 			continue // i'd be right happy to
 		meme_pack_data[pack.group]["packs"] += list(list(
