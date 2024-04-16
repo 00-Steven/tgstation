@@ -53,6 +53,9 @@
 /obj/machinery/computer/cargo/express/proc/get_pod_type()
 	return upgrade_disk ? upgrade_disk.pod_type : /obj/structure/closet/supplypod
 
+/obj/machinery/computer/cargo/express/proc/get_cost_multiplier() // bulk discount :^)
+	return (obj_flags & EMAGGED) ? (0.72 * MAX_EMAG_ROCKETS) : 1
+
 /obj/machinery/computer/cargo/express/item_interaction(mob/living/user, obj/item/tool, list/modifiers, is_right_clicking)
 	. = ..()
 	if(.)
@@ -124,7 +127,7 @@
 			continue // i'd be right happy to
 		meme_pack_data[pack.group]["packs"] += list(list(
 			"name" = pack.name,
-			"cost" = pack.get_cost(),
+			"cost" = pack.get_cost() * get_cost_multiplier(),
 			"id" = pack_id,
 			"desc" = pack.desc || pack.name // If there is a description, use it. Otherwise use the pack's name.
 		))
@@ -175,7 +178,7 @@
 		points_to_check = used_account.account_balance
 
 	var/emagged = obj_flags & EMAGGED
-	var/pack_cost = new_order.pack.get_cost() * (emagged ? 0.72 * MAX_EMAG_ROCKETS) // bulk discount :^)
+	var/pack_cost = new_order.pack.get_cost() * get_cost_multiplier()
 
 	if(pack_cost <= points_to_check)
 		playsound(src, 'sound/machines/buzz-sigh.ogg', 50, FALSE)
