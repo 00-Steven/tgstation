@@ -149,7 +149,6 @@
 	beacon.name = "Supply Pod Beacon #[printed_beacons]"
 
 /obj/machinery/computer/cargo/express/proc/attempt_order(var/id)
-	message_admins("attempt_order - usr: [usr]")
 	if(TIMER_COOLDOWN_RUNNING(src, COOLDOWN_EXPRESSPOD_CONSOLE))
 		say("Railgun recalibrating. Stand by.")
 		return
@@ -277,5 +276,4 @@
 			if(COOLDOWN_FINISHED(src, cooldown)) // We do not trust the client to not try to print anyway.
 				print_beacon()
 		if("add") // Generate Supply Order first
-			message_admins("ui_act - usr: [usr]")
 			attempt_order(params["id"])
