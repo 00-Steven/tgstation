@@ -169,11 +169,11 @@
 	switch(action)
 		if("LZCargo")
 			usingBeacon = FALSE
-			if (beacon)
+			if(beacon)
 				beacon.update_status(SP_UNREADY) //ready light on beacon will turn off
 		if("LZBeacon")
 			usingBeacon = TRUE
-			if (beacon)
+			if(beacon)
 				beacon.update_status(SP_READY) //turns on the beacon's ready light
 		if("printBeacon")
 			var/datum/bank_account/D = SSeconomy.get_dep_account(cargo_account)
@@ -262,4 +262,3 @@
 							. = TRUE
 							update_appearance()
 							CHECK_TICK
-
