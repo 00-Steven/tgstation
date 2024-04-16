@@ -94,7 +94,7 @@
 	if(obj_flags & EMAGGED)
 		return FALSE
 	if(user)
-		if (emag_card)
+		if(emag_card)
 			user.visible_message(span_warning("[user] swipes [emag_card] through [src]!"))
 		to_chat(user, span_notice("You change the routing protocols, allowing the Supply Pod to land anywhere on the station."))
 	obj_flags |= EMAGGED
