@@ -168,13 +168,13 @@
 		rank = "Silicon"
 	var/reason = ""
 	var/list/empty_turfs
-	var/datum/supply_order/SO = new(pack, name, rank, ckey, reason)
+	var/datum/supply_order/new_order = new(pack, name, rank, ckey, reason)
 	var/points_to_check
 	var/datum/bank_account/used_account = SSeconomy.get_dep_account(cargo_account)
 	if(used_account)
 		points_to_check = used_account.account_balance
 	if(!(obj_flags & EMAGGED))
-		if(SO.pack.get_cost() <= points_to_check)
+		if(new_order.pack.get_cost() <= points_to_check)
 			var/LZ
 			if (istype(beacon) && usingBeacon)//prioritize beacons over landing in cargobay
 				LZ = get_turf(beacon)
@@ -191,17 +191,17 @@
 					CHECK_TICK
 				if(empty_turfs?.len)
 					LZ = pick(empty_turfs)
-			if (SO.pack.get_cost() <= points_to_check && LZ)//we need to call the cost check again because of the CHECK_TICK call
+			if (new_order.pack.get_cost() <= points_to_check && LZ)//we need to call the cost check again because of the CHECK_TICK call
 				TIMER_COOLDOWN_START(src, COOLDOWN_EXPRESSPOD_CONSOLE, 5 SECONDS)
-				used_account.adjust_money(-SO.pack.get_cost())
+				used_account.adjust_money(-new_order.pack.get_cost())
 				if(pack.special_pod)
-					new /obj/effect/pod_landingzone(LZ, pack.special_pod, SO)
+					new /obj/effect/pod_landingzone(LZ, pack.special_pod, new_order)
 				else
-					new /obj/effect/pod_landingzone(LZ, get_pod_type(), SO)
+					new /obj/effect/pod_landingzone(LZ, get_pod_type(), new_order)
 				. = TRUE
 				update_appearance()
 	else
-		if(SO.pack.get_cost() * (0.72*MAX_EMAG_ROCKETS) <= points_to_check) // bulk discount :^)
+		if(new_order.pack.get_cost() * (0.72*MAX_EMAG_ROCKETS) <= points_to_check) // bulk discount :^)
 			landingzone = GLOB.areas_by_type[pick(GLOB.the_station_areas)]  //override default landing zone
 			for(var/turf/open/floor/T in landingzone.get_turfs_from_all_zlevels())
 				if(T.is_blocked_turf())
@@ -210,16 +210,16 @@
 				CHECK_TICK
 			if(empty_turfs?.len)
 				TIMER_COOLDOWN_START(src, COOLDOWN_EXPRESSPOD_CONSOLE, 10 SECONDS)
-				used_account.adjust_money(-(SO.pack.get_cost() * (0.72*MAX_EMAG_ROCKETS)))
+				used_account.adjust_money(-(new_order.pack.get_cost() * (0.72*MAX_EMAG_ROCKETS)))
 
-				SO.generateRequisition(get_turf(src))
+				new_order.generateRequisition(get_turf(src))
 				for(var/i in 1 to MAX_EMAG_ROCKETS)
 					var/LZ = pick(empty_turfs)
 					LAZYREMOVE(empty_turfs, LZ)
 					if(pack.special_pod)
-						new /obj/effect/pod_landingzone(LZ, pack.special_pod, SO)
+						new /obj/effect/pod_landingzone(LZ, pack.special_pod, new_order)
 					else
-						new /obj/effect/pod_landingzone(LZ, get_pod_type(), SO)
+						new /obj/effect/pod_landingzone(LZ, get_pod_type(), new_order)
 					. = TRUE
 					update_appearance()
 					CHECK_TICK
