@@ -139,7 +139,8 @@
 		say("Insufficient funds to purchase beacon.")
 		return
 
-	cooldown = 10 //a ~ten second cooldown for printing beacons to prevent spam
+	// A ~ten second cooldown for printing beacons to prevent spam
+	COOLDOWN_START(src, cooldown, 10 SECONDS)
 	var/obj/item/supplypod_beacon/new_beacon = new /obj/item/supplypod_beacon(drop_location())
 	// rather than in beacon's Initialize(), we can assign the computer to the beacon by reusing this proc)
 	new_beacon.link_console(src, usr)
@@ -158,11 +159,12 @@
 	data["beaconzone"] = beacon ? get_area(beacon) : ""//where is the beacon located? outputs in the tgui
 	data["usingBeacon"] = usingBeacon //is the mode set to deliver to the beacon or the cargobay?
 	data["canBeacon"] = !usingBeacon || canBeacon //is the mode set to beacon delivery, and is the beacon in a valid location?
-	data["canBuyBeacon"] = cooldown <= 0 && D.account_balance >= BEACON_COST
+	var/beacon_cd_finished = COOLDOWN_FINISHED(src, cooldown)
+	data["canBuyBeacon"] = beacon_cd_finished && D.account_balance >= BEACON_COST
 	data["beaconError"] = usingBeacon && !canBeacon ? "(BEACON ERROR)" : ""//changes button text to include an error alert if necessary
 	data["hasBeacon"] = beacon != null//is there a linked beacon?
 	data["beaconName"] = beacon ? beacon.name : "No Beacon Found"
-	data["printMsg"] = cooldown > 0 ? "Print Beacon for [BEACON_COST] credits ([cooldown])" : "Print Beacon for [BEACON_COST] credits"//buttontext for printing beacons
+	data["printMsg"] = beacon_cd_finished ? "Print Beacon for [BEACON_COST] credits" : "Print Beacon for [BEACON_COST] credits ([DisplayTimeText(COOLDOWN_TIMELEFT(src, cooldown))])" //buttontext for printing beacons
 	data["supplies"] = list()
 	message = "Sales are near-instantaneous - please choose carefully."
 	if(SSshuttle.supply_blocked)
@@ -195,10 +197,9 @@
 			if(beacon)
 				beacon.update_status(SP_READY) //turns on the beacon's ready light
 		if("printBeacon")
-			if(cooldown > 0) // We do not trust the client to not try to print anyway.
-				return
-			print_beacon()
 		if("add")//Generate Supply Order first
+			if(COOLDOWN_FINISHED(src, cooldown)) // We do not trust the client to not try to print anyway.
+				print_beacon()
 			if(TIMER_COOLDOWN_RUNNING(src, COOLDOWN_EXPRESSPOD_CONSOLE))
 				say("Railgun recalibrating. Stand by.")
 				return
