@@ -181,6 +181,7 @@
 
 	var/emagged = obj_flags & EMAGGED
 	var/pack_cost = new_order.pack.get_cost() * get_cost_multiplier()
+	var/pod_count = emagged ? MAX_EMAG_ROCKETS : 1
 
 	if(pack_cost > points_to_check)
 		playsound(src, 'sound/machines/buzz-sigh.ogg', 50, FALSE)
@@ -227,7 +228,7 @@
 				used_account.adjust_money(-pack_cost)
 
 				new_order.generateRequisition(get_turf(src))
-				for(var/i in 1 to MAX_EMAG_ROCKETS)
+				for(var/i in 1 to pod_count)
 					var/LZ = pick(empty_turfs)
 					LAZYREMOVE(empty_turfs, LZ)
 					if(pack.special_pod)
