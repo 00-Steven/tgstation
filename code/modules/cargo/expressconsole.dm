@@ -142,9 +142,9 @@
 	// A ~ten second cooldown for printing beacons to prevent spam
 	COOLDOWN_START(src, cooldown, 10 SECONDS)
 	var/obj/item/supplypod_beacon/new_beacon = new /obj/item/supplypod_beacon(drop_location())
-	// rather than in beacon's Initialize(), we can assign the computer to the beacon by reusing this proc)
+	// Rather than in beacon's Initialize(), we can assign the computer to the beacon by reusing this proc
 	new_beacon.link_console(src, usr)
-	// printed_beacons starts at 0, so the first one out will be called beacon # 1
+	// Printed_beacons starts at 0, so the first one out will be called beacon # 1
 	printed_beacons++ 
 	beacon.name = "Supply Pod Beacon #[printed_beacons]"
 
@@ -197,81 +197,8 @@
 			if(beacon)
 				beacon.update_status(SP_READY) //turns on the beacon's ready light
 		if("printBeacon")
-		if("add")//Generate Supply Order first
 			if(COOLDOWN_FINISHED(src, cooldown)) // We do not trust the client to not try to print anyway.
 				print_beacon()
-			if(TIMER_COOLDOWN_RUNNING(src, COOLDOWN_EXPRESSPOD_CONSOLE))
-				say("Railgun recalibrating. Stand by.")
-				return
-			var/id = params["id"]
-			id = text2path(id) || id
-			var/datum/supply_pack/pack = SSshuttle.supply_packs[id]
-			if(!istype(pack))
-				CRASH("Unknown supply pack id given by express order console ui. ID: [params["id"]]")
-			var/name = "*None Provided*"
-			var/rank = "*None Provided*"
-			var/ckey = usr.ckey
-			if(ishuman(usr))
-				var/mob/living/carbon/human/H = usr
-				name = H.get_authentification_name()
-				rank = H.get_assignment(hand_first = TRUE)
-			else if(HAS_SILICON_ACCESS(usr))
-				name = usr.real_name
-				rank = "Silicon"
-			var/reason = ""
-			var/list/empty_turfs
-			var/datum/supply_order/SO = new(pack, name, rank, ckey, reason)
-			var/points_to_check
-			var/datum/bank_account/D = SSeconomy.get_dep_account(cargo_account)
-			if(D)
-				points_to_check = D.account_balance
-			if(!(obj_flags & EMAGGED))
-				if(SO.pack.get_cost() <= points_to_check)
-					var/LZ
-					if (istype(beacon) && usingBeacon)//prioritize beacons over landing in cargobay
-						LZ = get_turf(beacon)
-						beacon.update_status(SP_LAUNCH)
-					else if (!usingBeacon)//find a suitable supplypod landing zone in cargobay
-						landingzone = GLOB.areas_by_type[/area/station/cargo/storage]
-						if (!landingzone)
-							WARNING("[src] couldnt find a Quartermaster/Storage (aka cargobay) area on the station, and as such it has set the supplypod landingzone to the area it resides in.")
-							landingzone = get_area(src)
-						for(var/turf/open/floor/T in landingzone.get_turfs_from_all_zlevels())//uses default landing zone
-							if(T.is_blocked_turf())
-								continue
-							LAZYADD(empty_turfs, T)
-							CHECK_TICK
-						if(empty_turfs?.len)
-							LZ = pick(empty_turfs)
-					if (SO.pack.get_cost() <= points_to_check && LZ)//we need to call the cost check again because of the CHECK_TICK call
-						TIMER_COOLDOWN_START(src, COOLDOWN_EXPRESSPOD_CONSOLE, 5 SECONDS)
-						D.adjust_money(-SO.pack.get_cost())
-						if(pack.special_pod)
-							new /obj/effect/pod_landingzone(LZ, pack.special_pod, SO)
-						else
-							new /obj/effect/pod_landingzone(LZ, get_pod_type(), SO)
-						. = TRUE
-						update_appearance()
-			else
-				if(SO.pack.get_cost() * (0.72*MAX_EMAG_ROCKETS) <= points_to_check) // bulk discount :^)
-					landingzone = GLOB.areas_by_type[pick(GLOB.the_station_areas)]  //override default landing zone
-					for(var/turf/open/floor/T in landingzone.get_turfs_from_all_zlevels())
-						if(T.is_blocked_turf())
-							continue
-						LAZYADD(empty_turfs, T)
-						CHECK_TICK
-					if(empty_turfs?.len)
-						TIMER_COOLDOWN_START(src, COOLDOWN_EXPRESSPOD_CONSOLE, 10 SECONDS)
-						D.adjust_money(-(SO.pack.get_cost() * (0.72*MAX_EMAG_ROCKETS)))
-
-						SO.generateRequisition(get_turf(src))
-						for(var/i in 1 to MAX_EMAG_ROCKETS)
-							var/LZ = pick(empty_turfs)
-							LAZYREMOVE(empty_turfs, LZ)
-							if(pack.special_pod)
-								new /obj/effect/pod_landingzone(LZ, pack.special_pod, SO)
-							else
-								new /obj/effect/pod_landingzone(LZ, get_pod_type(), SO)
-							. = TRUE
-							update_appearance()
-							CHECK_TICK
+		if("add") // Generate Supply Order first
+			message_admins("ui_act - usr: [usr]")
+			attempt_order(params["id"])
