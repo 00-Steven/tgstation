@@ -258,7 +258,7 @@
 	data["supplies"] = meme_pack_data
 	return data
 
-/obj/machinery/computer/cargo/express/ui_act(action, params, datum/tgui/ui)
+/obj/machinery/computer/cargo/express/ui_act(action, params, datum/tgui/ui, datum/ui_state/state)
 	. = ..()
 	if(.)
 		return
