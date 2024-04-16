@@ -170,9 +170,9 @@
 	var/list/empty_turfs
 	var/datum/supply_order/SO = new(pack, name, rank, ckey, reason)
 	var/points_to_check
-	var/datum/bank_account/D = SSeconomy.get_dep_account(cargo_account)
-	if(D)
-		points_to_check = D.account_balance
+	var/datum/bank_account/used_account = SSeconomy.get_dep_account(cargo_account)
+	if(used_account)
+		points_to_check = used_account.account_balance
 	if(!(obj_flags & EMAGGED))
 		if(SO.pack.get_cost() <= points_to_check)
 			var/LZ
@@ -193,7 +193,7 @@
 					LZ = pick(empty_turfs)
 			if (SO.pack.get_cost() <= points_to_check && LZ)//we need to call the cost check again because of the CHECK_TICK call
 				TIMER_COOLDOWN_START(src, COOLDOWN_EXPRESSPOD_CONSOLE, 5 SECONDS)
-				D.adjust_money(-SO.pack.get_cost())
+				used_account.adjust_money(-SO.pack.get_cost())
 				if(pack.special_pod)
 					new /obj/effect/pod_landingzone(LZ, pack.special_pod, SO)
 				else
@@ -210,7 +210,7 @@
 				CHECK_TICK
 			if(empty_turfs?.len)
 				TIMER_COOLDOWN_START(src, COOLDOWN_EXPRESSPOD_CONSOLE, 10 SECONDS)
-				D.adjust_money(-(SO.pack.get_cost() * (0.72*MAX_EMAG_ROCKETS)))
+				used_account.adjust_money(-(SO.pack.get_cost() * (0.72*MAX_EMAG_ROCKETS)))
 
 				SO.generateRequisition(get_turf(src))
 				for(var/i in 1 to MAX_EMAG_ROCKETS)
