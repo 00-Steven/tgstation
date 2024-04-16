@@ -10,15 +10,25 @@
 	is_express = TRUE
 	interface_type = "CargoExpress"
 
+	/// Warning message displayed in our UI.
 	var/message
-	var/printed_beacons = 0 //number of beacons printed. Used to determine beacon names.
+	/// Number of beacons printed. Used to determine beacon names.
+	var/printed_beacons = 0
+	/// Cached list of available supplypacks.
 	var/list/meme_pack_data
-	var/obj/item/supplypod_beacon/beacon //the linked supplypod beacon
-	var/area/landingzone = /area/station/cargo/storage //where we droppin boys
+	/// The linked supplypod beacon.
+	var/obj/item/supplypod_beacon/beacon
+	/// where we droppin boys
+	var/area/landingzone = /area/station/cargo/storage
+	/// Upgrade disk for determining which supplypod type to use.
+	var/obj/item/disk/cargo/upgrade_disk
 	var/podType = /obj/structure/closet/supplypod
-	var/cooldown = 0 //cooldown to prevent printing supplypod beacon spam
-	var/locked = TRUE //is the console locked? unlock with ID
-	var/usingBeacon = FALSE //is the console in beacon mode? exists to let beacon know when a pod may come in
+	/// Cooldown between supplypod beacon prints, to prevent spam.
+	var/cooldown = 0
+	/// Is the console locked? Unlocked with valid ID.
+	var/locked = TRUE
+	// Are we targeting a beacon with our supplypods?
+	var/usingBeacon = FALSE
 
 /obj/machinery/computer/cargo/express/Initialize(mapload)
 	. = ..()
@@ -33,24 +43,52 @@
 		beacon.unlink_console()
 	return ..()
 
-/obj/machinery/computer/cargo/express/attackby(obj/item/W, mob/living/user, params)
-	if(W.GetID() && allowed(user))
-		locked = !locked
-		to_chat(user, span_notice("You [locked ? "lock" : "unlock"] the interface."))
-		return
-	else if(istype(W, /obj/item/disk/cargo/bluespace_pod))
-		podType = /obj/structure/closet/supplypod/bluespacepod//doesnt effect circuit board, making reversal possible
-		to_chat(user, span_notice("You insert the disk into [src], allowing for advanced supply delivery vehicles."))
-		qdel(W)
-		return TRUE
-	else if(istype(W, /obj/item/supplypod_beacon))
-		var/obj/item/supplypod_beacon/sb = W
-		if (sb.express_console != src)
-			sb.link_console(src, user)
-			return TRUE
-		else
-			to_chat(user, span_alert("[src] is already linked to [sb]."))
-	..()
+/obj/machinery/computer/cargo/express/dump_inventory_contents(list/subset)
+	upgrade_disk = null
+	. = ..()
+
+/obj/machinery/computer/cargo/express/proc/get_pod_type()
+	return upgrade_disk ? upgrade_disk.pod_type : /obj/structure/closet/supplypod
+
+/obj/machinery/computer/cargo/express/item_interaction(mob/living/user, obj/item/tool, list/modifiers, is_right_clicking)
+	. = ..()
+	if(.)
+		return .
+
+	if(tool.GetID())
+		. = id_act(user, tool)
+	else if(istype(tool, /obj/item/disk/cargo))
+		. = disk_act(user, tool)
+	else if(istype(tool, /obj/item/supplypod_beacon))
+		. = beacon_act(user, tool)
+
+	return .
+
+/// Called when we interact with the console with an ID (or item containing one), attempts to toggle the access lock.
+/obj/machinery/computer/cargo/express/proc/id_act(mob/living/user, obj/item/card/id/swiped_card)
+	if(!check_access(swiped_card))
+		balloon_alert(user, "access denied!")
+		return ITEM_INTERACT_BLOCKING
+	locked = !locked
+	to_chat(user, span_notice("You [locked ? "lock" : "unlock"] the interface."))
+	return ITEM_INTERACT_SUCCESS
+
+/// Called when we interact with the console with a supplypod upgrade disk, attempts to insert it and swaps out the old one.
+/obj/machinery/computer/cargo/express/proc/disk_act(mob/living/user, obj/item/disk/cargo/inserted_disk)
+	if(upgrade_disk)
+		upgrade_disk.forceMove(drop_location())
+	upgrade_disk = inserted_disk
+	inserted_disk.forceMove(src)
+	to_chat(user, span_notice("You insert the disk into [src], allowing for advanced supply delivery vehicles."))
+	return ITEM_INTERACT_SUCCESS
+
+/// Called when we interact with the console with a supplypod beacon, attempts to link it to our console.
+/obj/machinery/computer/cargo/express/proc/beacon_act(mob/living/user, obj/item/supplypod_beacon/used_beacon)
+	if(used_beacon.express_console == src)
+		to_chat(user, span_alert("[src] is already linked to [used_beacon]."))
+		return ITEM_INTERACT_BLOCKING
+	used_beacon.link_console(src, user)
+	return ITEM_INTERACT_SUCCESS
 
 /obj/machinery/computer/cargo/express/emag_act(mob/user, obj/item/card/emag/emag_card)
 	if(obj_flags & EMAGGED)
@@ -198,7 +236,7 @@
 						if(pack.special_pod)
 							new /obj/effect/pod_landingzone(LZ, pack.special_pod, SO)
 						else
-							new /obj/effect/pod_landingzone(LZ, podType, SO)
+							new /obj/effect/pod_landingzone(LZ, get_pod_type(), SO)
 						. = TRUE
 						update_appearance()
 			else
@@ -220,7 +258,7 @@
 							if(pack.special_pod)
 								new /obj/effect/pod_landingzone(LZ, pack.special_pod, SO)
 							else
-								new /obj/effect/pod_landingzone(LZ, podType, SO)
+								new /obj/effect/pod_landingzone(LZ, get_pod_type(), SO)
 							. = TRUE
 							update_appearance()
 							CHECK_TICK

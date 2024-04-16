@@ -742,10 +742,21 @@
 	qdel(src) //The pod_landingzone's purpose is complete. It can rest easy now
 
 //------------------------------------UPGRADES-------------------------------------//
-/obj/item/disk/cargo/bluespace_pod //Disk that can be inserted into the Express Console to allow for Advanced Bluespace Pods
-	name = "Bluespace Drop Pod Upgrade"
-	desc = "This disk provides a firmware update to the Express Supply Console, granting the use of Nanotrasen's Bluespace Drop Pods to the supply department."
+/// Base for disks that can be inserted into the Express Console to allow for different types of pods.
+/obj/item/disk/cargo
+	name = "Generic Drop Pod Upgrade"
+	desc = "This disk provides a firmware update to the Express Supply Console, or it would if it was set properly."
 	icon = 'icons/obj/devices/circuitry_n_data.dmi'
 	icon_state = "cargodisk"
 	inhand_icon_state = "card-id"
 	w_class = WEIGHT_CLASS_SMALL
+	/// Typepath for the supplypods to use
+	var/pod_type
+
+/// Disk that can be inserted into the Express Console to allow for Advanced Bluespace Pods
+/obj/item/disk/cargo/bluespace_pod
+	name = "Bluespace Drop Pod Upgrade"
+	desc = "This disk provides a firmware update to the Express Supply Console, granting the use of Nanotrasen's Bluespace Drop Pods to the supply department."
+	icon_state = "cargodisk"
+	inhand_icon_state = "card-id"
+	pod_type = /obj/structure/closet/supplypod/bluespacepod
