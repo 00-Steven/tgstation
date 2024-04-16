@@ -194,6 +194,8 @@
 			if(beacon)
 				beacon.update_status(SP_READY) //turns on the beacon's ready light
 		if("printBeacon")
+			if(cooldown > 0) // We do not trust the client to not try to print anyway.
+				return
 			print_beacon()
 		if("add")//Generate Supply Order first
 			if(TIMER_COOLDOWN_RUNNING(src, COOLDOWN_EXPRESSPOD_CONSOLE))
