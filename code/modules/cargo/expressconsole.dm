@@ -18,8 +18,8 @@
 	var/list/meme_pack_data
 	/// The linked supplypod beacon.
 	var/obj/item/supplypod_beacon/beacon
-	/// where we droppin boys
-	var/area/landingzone = /area/station/cargo/storage
+	/// where we droppin boys (by default)
+	var/area/default_landingzone = /area/station/cargo/storage
 	/// Upgrade disk for determining which supplypod type to use.
 	var/obj/item/disk/cargo/upgrade_disk
 	var/podType = /obj/structure/closet/supplypod
@@ -50,11 +50,21 @@
 	upgrade_disk = null
 	. = ..()
 
-/obj/machinery/computer/cargo/express/proc/get_pod_type()
+/obj/machinery/computer/cargo/express/proc/get_pod_type(datum/supply_pack/pack)
+	if(pack.special_pod)
+		return pack.special_pod
 	return upgrade_disk ? upgrade_disk.pod_type : /obj/structure/closet/supplypod
 
 /obj/machinery/computer/cargo/express/proc/get_cost_multiplier() // bulk discount :^)
 	return (obj_flags & EMAGGED) ? (0.72 * MAX_EMAG_ROCKETS) : 1
+
+/obj/machinery/computer/cargo/express/proc/get_target_area()
+	var/area/target_area_type = (obj_flags & EMAGGED) ? pick(GLOB.the_station_areas) : default_landingzone
+	var/area/target_area = GLOB.areas_by_type[target_area_type]
+	if(isnull(target_area))
+		WARNING("[src] couldnt find [(obj_flags & EMAGGED) ? "any valid" : "a Quartermaster/Storage (aka cargobay)"] area on the station, and as such it has set the supplypod landingzone to the area it resides in.")
+		target_area = get_area(src)
+	return target_area
 
 /obj/machinery/computer/cargo/express/item_interaction(mob/living/user, obj/item/tool, list/modifiers, is_right_clicking)
 	. = ..()
@@ -139,7 +149,8 @@
 		return
 
 	if(!used_account.adjust_money(-BEACON_COST))
-		say("Insufficient funds to purchase beacon.")
+		playsound(src, 'sound/machines/buzz-sigh.ogg', 50, FALSE)
+		say("ERROR: Insufficient funds to purchase beacon.")
 		return
 
 	// A ~ten second cooldown for printing beacons to prevent spam
@@ -151,7 +162,7 @@
 	printed_beacons++ 
 	beacon.name = "Supply Pod Beacon #[printed_beacons]"
 
-/obj/machinery/computer/cargo/express/proc/attempt_order(mob/user, var/id)
+/obj/machinery/computer/cargo/express/proc/attempt_order(mob/user, id)
 	if(TIMER_COOLDOWN_RUNNING(src, COOLDOWN_EXPRESSPOD_CONSOLE))
 		say("Railgun recalibrating. Stand by.")
 		return
@@ -170,74 +181,63 @@
 		name = user.real_name
 		rank = "Silicon"
 	var/reason = ""
-	var/list/empty_turfs
+
+	if(usingBeacon)
+		if(isnull(beacon))
+			playsound(src, 'sound/machines/buzz-sigh.ogg', 50, FALSE)
+			say("BEACON ERROR: Beacon signal unavailable. Recalibrating to default area.")
+			usingBeacon = FALSE
+			return
+		if(!isturf(beacon.loc) && !ismob(beacon.loc))
+			playsound(src, 'sound/machines/buzz-sigh.ogg', 50, FALSE)
+			say("BEACON ERROR: Beacon must be exposed.")
+			return
+
 	var/datum/supply_order/new_order = new(pack, name, rank, ckey, reason)
-	var/points_to_check
+	var/pack_cost = new_order.pack.get_cost() * get_cost_multiplier()
+	var/emagged = obj_flags & EMAGGED
+	var/pod_count = emagged ? MAX_EMAG_ROCKETS : 1
 	var/datum/bank_account/used_account = SSeconomy.get_dep_account(cargo_account)
 	if(isnull(used_account))
 		return
-	if(used_account)
-		points_to_check = used_account.account_balance
 
-	var/emagged = obj_flags & EMAGGED
-	var/pack_cost = new_order.pack.get_cost() * get_cost_multiplier()
-	var/pod_count = emagged ? MAX_EMAG_ROCKETS : 1
-
-	if(pack_cost > points_to_check)
+	if(!used_account.adjust_money(-pack_cost))
 		playsound(src, 'sound/machines/buzz-sigh.ogg', 50, FALSE)
-		say("ERROR: Insufficient funds.")
+		say("ERROR: Insufficient funds to purchase supply pack.")
 		return
 
-	if(!(obj_flags & EMAGGED))
-		if(pack_cost <= points_to_check)
-			var/LZ
-			if (istype(beacon) && usingBeacon)//prioritize beacons over landing in cargobay
-				LZ = get_turf(beacon)
-				beacon.update_status(SP_LAUNCH)
-			else if (!usingBeacon)//find a suitable supplypod landing zone in cargobay
-				landingzone = GLOB.areas_by_type[/area/station/cargo/storage]
-				if (!landingzone)
-					WARNING("[src] couldnt find a Quartermaster/Storage (aka cargobay) area on the station, and as such it has set the supplypod landingzone to the area it resides in.")
-					landingzone = get_area(src)
-				for(var/turf/open/floor/T in landingzone.get_turfs_from_all_zlevels())//uses default landing zone
-					if(T.is_blocked_turf())
-						continue
-					LAZYADD(empty_turfs, T)
-					CHECK_TICK
-				if(empty_turfs?.len)
-					LZ = pick(empty_turfs)
-			if (pack_cost <= points_to_check && LZ)//we need to call the cost check again because of the CHECK_TICK call
-				TIMER_COOLDOWN_START(src, COOLDOWN_EXPRESSPOD_CONSOLE, 5 SECONDS)
-				used_account.adjust_money(-pack_cost)
-				if(pack.special_pod)
-					new /obj/effect/pod_landingzone(LZ, pack.special_pod, new_order)
-				else
-					new /obj/effect/pod_landingzone(LZ, get_pod_type(), new_order)
-				. = TRUE
-				update_appearance()
-	else
-		if(pack_cost <= points_to_check)
-			landingzone = GLOB.areas_by_type[pick(GLOB.the_station_areas)]  //override default landing zone
-			for(var/turf/open/floor/T in landingzone.get_turfs_from_all_zlevels())
-				if(T.is_blocked_turf())
-					continue
-				LAZYADD(empty_turfs, T)
-				CHECK_TICK
-			if(empty_turfs?.len)
-				TIMER_COOLDOWN_START(src, COOLDOWN_EXPRESSPOD_CONSOLE, 10 SECONDS)
-				used_account.adjust_money(-pack_cost)
+	TIMER_COOLDOWN_START(src, COOLDOWN_EXPRESSPOD_CONSOLE, 5 SECONDS)
 
-				new_order.generateRequisition(get_turf(src))
-				for(var/i in 1 to pod_count)
-					var/LZ = pick(empty_turfs)
-					LAZYREMOVE(empty_turfs, LZ)
-					if(pack.special_pod)
-						new /obj/effect/pod_landingzone(LZ, pack.special_pod, new_order)
-					else
-						new /obj/effect/pod_landingzone(LZ, get_pod_type(), new_order)
-					. = TRUE
-					update_appearance()
-					CHECK_TICK
+	// Target priorities: emag > beacon > default > our area
+	var/area/target_area
+	var/list/empty_turfs
+	if(!emagged && usingBeacon)
+		LAZYADD(empty_turfs, get_turf(beacon))
+		beacon.update_status(SP_LAUNCH)
+	else
+		target_area = get_target_area()
+
+	if(target_area)
+		for(var/turf/open/floor/turf in target_area.get_turfs_from_all_zlevels())
+			if(turf.is_blocked_turf())
+				continue
+			LAZYADD(empty_turfs, turf)
+			CHECK_TICK
+
+	if(isnull(empty_turfs) || empty_turfs.len < pod_count)
+		playsound(src, 'sound/machines/buzz-sigh.ogg', 50, FALSE)
+		say("ERROR: Insufficient space for delivery in target area. Refunding.")
+		used_account.adjust_money(pack_cost)
+		return
+
+	new_order.generateRequisition(drop_location())
+	for(var/i in 1 to pod_count)
+		var/landing_zone = pick(empty_turfs)
+		LAZYREMOVE(empty_turfs, landing_zone)
+		new /obj/effect/pod_landingzone(landing_zone, get_pod_type(new_order.pack), new_order)
+		. = TRUE
+		update_appearance()
+		CHECK_TICK
 
 /obj/machinery/computer/cargo/express/ui_data(mob/user)
 	var/canBeacon = beacon && (isturf(beacon.loc) || ismob(beacon.loc))//is the beacon in a valid location?
