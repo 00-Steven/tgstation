@@ -80,7 +80,7 @@ export const DecalPainter = (props) => {
             </Button>
           )}
         </Section>
-        <Section title="Decal Style">
+        <Section title="Decal Style" scrollableHorizontal>
           <Flex direction="row" wrap="nowrap" align="fill" justify="fill">
             {data.decal_list.map((decal) => {
               const nondirectional = data.nondirectional_decals.includes(
