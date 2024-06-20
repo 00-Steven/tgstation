@@ -234,3 +234,55 @@ INITIALIZE_IMMEDIATE(/atom/movable/screen/plane_master)
 
 		return
 	show_to(relevant)
+
+/atom/movable/screen/plane_master/proc/offset_change_fucked_up_two(new_offset)
+	offset = new_offset
+	name = "[initial(name)] #[offset]"
+	//SET_PLANE_W_SCALAR(src, real_plane, offset)
+	plane = real_plane - (PLANE_RANGE * offset)
+	for(var/i in 1 to length(render_relay_planes))
+		//render_relay_planes[i] = GET_NEW_PLANE(render_relay_planes[i], offset)
+		render_relay_planes[i] = render_relay_planes[i] - (PLANE_RANGE * offset)
+	//if(initial(render_target))
+	render_target = _OFFSET_RENDER_TARGET(initial(render_target), offset)
+
+/atom/movable/screen/plane_master/proc/offset_change_fucked_up(new_offset)
+	for(var/atom/movable/render_plane_relay/rpr in relays)
+		if(istype(src, /atom/movable/screen/plane_master/fullscreen))
+			message_admins("offset_change_fucked_up loop_ONE [type] -<br>rpr: [rpr]<br>rpr.type: [rpr.type]<br>rpr.plane: [rpr.plane]<br>rpr.layer: [rpr.layer]")
+	if(offset == new_offset)
+		if(istype(src, /atom/movable/screen/plane_master/fullscreen))
+			message_admins("offset_change_fucked_up FAILED [type]")
+		return
+	if(istype(src, /atom/movable/screen/plane_master/fullscreen))
+		message_admins("offset_change_fucked_up PASSED [type]")
+	var/old_offset = offset
+	offset = new_offset
+	
+	var/new_render_target = _OFFSET_RENDER_TARGET(get_plane_master_render_base(name), offset)
+	plane = real_plane - (PLANE_RANGE * (offset))
+	var/new_layer = (plane + abs(LOWEST_EVER_PLANE * 30))
+
+	for(var/render_relay_plane in render_relay_planes)
+		var/base_plane = GET_NEW_PLANE(render_relay_plane, -old_offset)
+		remove_relay_from(render_relay_plane)
+		var/atom/movable/render_plane_relay/new_relay = add_relay_to(GET_NEW_PLANE(base_plane, new_offset), relay_layer = new_layer)
+		new_relay.render_source = new_render_target
+
+	render_target = new_render_target
+
+
+//	for(var/atom/movable/render_plane_relay/rpr in relays)
+//		remove_relay_from(rpr.plane)
+//	offset = new_offset
+//	render_target = _OFFSET_RENDER_TARGET(get_plane_master_render_base(name), offset)
+//	message_admins("offset_change_fucked_up POST-REMOVE [type]")
+//	plane = real_plane - (PLANE_RANGE * (offset))
+//	for(var/render_relay_plane in initial(render_relay_planes))
+//		var/new_layer = (plane + abs(LOWEST_EVER_PLANE * 30))
+//		add_relay_to(GET_NEW_PLANE(render_relay_plane, offset), relay_layer = new_layer)
+	if(istype(src, /atom/movable/screen/plane_master/fullscreen))
+		message_admins("offset_change_fucked_up POST-ADD [type]")
+	for(var/atom/movable/render_plane_relay/rpr in relays)
+		if(istype(src, /atom/movable/screen/plane_master/fullscreen))
+			message_admins("offset_change_fucked_up loop_TWO [type] -<br>rpr: [rpr]<br>rpr.type: [rpr.type]<br>rpr.plane: [rpr.plane]<br>rpr.layer: [rpr.layer]")
