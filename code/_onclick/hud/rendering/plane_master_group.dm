@@ -151,7 +151,7 @@
 	for(var/plane_key in plane_masters)
 		var/atom/movable/screen/plane_master/plane = plane_masters[plane_key]
 		if(!plane.allows_offsetting)
-			//plane.offset_change_fucked_up(new_offset)
+			plane.offset_change_fucked_up(new_offset)
 			//plane.offset_change_fucked_up_two(new_offset)
 			continue
 

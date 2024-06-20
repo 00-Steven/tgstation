@@ -266,7 +266,8 @@ INITIALIZE_IMMEDIATE(/atom/movable/screen/plane_master)
 	for(var/render_relay_plane in render_relay_planes)
 		var/base_plane = GET_NEW_PLANE(render_relay_plane, -old_offset)
 		remove_relay_from(render_relay_plane)
-		var/atom/movable/render_plane_relay/new_relay = add_relay_to(GET_NEW_PLANE(base_plane, new_offset), relay_layer = new_layer)
+		//var/atom/movable/render_plane_relay/new_relay = add_relay_to(GET_NEW_PLANE(base_plane, new_offset), relay_layer = new_layer)
+		var/atom/movable/render_plane_relay/new_relay = generate_relay_to(GET_NEW_PLANE(base_plane, new_offset), relay_layer = new_layer)
 		new_relay.render_source = new_render_target
 
 	render_target = new_render_target
