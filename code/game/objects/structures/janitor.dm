@@ -15,6 +15,11 @@
 	create_reagents(100, OPENCONTAINER)
 	register_context()
 
+/obj/structure/mop_bucket/atom_deconstruct(disassembled)
+	. = ..()
+	if(reagents.total_volume) // Spill our reagents
+		chem_splash(drop_location(), null, (reagents.total_volume / 50), list(reagents))
+
 /obj/structure/mop_bucket/add_context(atom/source, list/context, obj/item/held_item, mob/living/user)
 	. = ..()
 
@@ -28,30 +33,25 @@
 
 	return .
 
-/obj/structure/mop_bucket/attackby(obj/item/weapon, mob/user, params)
-	if(istype(weapon, /obj/item/reagent_containers))
-		update_appearance(UPDATE_OVERLAYS)
-		return FALSE // skip attack animation when refilling cart
+/obj/structure/mop_bucket/item_interaction(mob/living/user, obj/item/tool, list/modifiers)
+	if(istype(tool, /obj/item/mop))
+		return mop_act(user, tool)
 
-	return ..()
+/obj/structure/mop_bucket/item_interaction_secondary(mob/living/user, obj/item/tool, list/modifiers)
+	if(istype(tool, /obj/item/mop))
+		return mop_act(user, tool)
 
-/obj/structure/mop_bucket/attackby_secondary(obj/item/weapon, mob/user, params)
-	if(istype(weapon, /obj/item/mop))
-		if(weapon.reagents.total_volume >= weapon.reagents.maximum_volume)
-			balloon_alert(user, "already soaked!")
-			return SECONDARY_ATTACK_CANCEL_ATTACK_CHAIN
-		if(!CART_HAS_MINIMUM_REAGENT_VOLUME)
-			balloon_alert(user, "empty!")
-			return SECONDARY_ATTACK_CANCEL_ATTACK_CHAIN
-		reagents.trans_to(weapon, weapon.reagents.maximum_volume, transferred_by = user)
-		balloon_alert(user, "doused mop")
-		playsound(src, 'sound/effects/slosh.ogg', 25, vary = TRUE)
-
-	if(istype(weapon, /obj/item/reagent_containers) || istype(weapon, /obj/item/mop))
-		update_appearance(UPDATE_OVERLAYS)
-		return SECONDARY_ATTACK_CONTINUE_CHAIN // skip attack animations when refilling cart
-
-	return SECONDARY_ATTACK_CONTINUE_CHAIN
+/obj/structure/mop_bucket/proc/mop_act(mob/living/user, obj/item/tool)
+	if(tool.reagents.total_volume >= tool.reagents.maximum_volume)
+		balloon_alert(user, "already soaked!")
+		return ITEM_INTERACT_BLOCKING
+	if(!CART_HAS_MINIMUM_REAGENT_VOLUME)
+		balloon_alert(user, "empty!")
+		return ITEM_INTERACT_BLOCKING
+	reagents.trans_to(tool, tool.reagents.maximum_volume, transferred_by = user)
+	balloon_alert(user, "doused mop")
+	playsound(src, 'sound/effects/slosh.ogg', 25, vary = TRUE)
+	return ITEM_INTERACT_SUCCESS
 
 /obj/structure/mop_bucket/update_overlays()
 	. = ..()
@@ -85,6 +85,22 @@
 	QDEL_NULL(mybag)
 	QDEL_LIST(held_signs)
 	return ..()
+
+/obj/structure/mop_bucket/janitorialcart/atom_deconstruct(disassembled)
+	. = ..()
+	myreplacer?.forceMove(drop_location())
+	myreplacer = null
+	myspray?.forceMove(drop_location())
+	myreplacer = null
+	mybroom?.forceMove(drop_location())
+	mybroom = null
+	mymop?.forceMove(drop_location())
+	mymop = null
+	mybag?.forceMove(drop_location())
+	mybag = null
+	for(var/obj/item/held_sign as anything in held_signs)
+		held_sign?.forceMove(drop_location())
+		held_signs -= held_sign
 
 /obj/structure/mop_bucket/janitorialcart/Entered(atom/movable/arrived, atom/old_loc, list/atom/old_locs)
 	if(istype(arrived, /obj/item/storage/bag/trash))
@@ -182,50 +198,47 @@
 
 	return . || NONE
 
-/obj/structure/mop_bucket/janitorialcart/attackby(obj/item/attacking_item, mob/user, params)
-	if(istype(attacking_item, /obj/item/mop))
-		if(mymop)
-			balloon_alert(user, "already has \a [mymop]!")
-		else if(user.transferItemToLoc(attacking_item, src))
-			balloon_alert(user, "placed [attacking_item]")
-		return
+/obj/structure/mop_bucket/janitorialcart/item_interaction(mob/living/user, obj/item/tool, list/modifiers)
+	// Override parent, we don't want mop dousing on left click.
+	if(istype(tool, /obj/item/mop))
+		return insert_janitorial_item(user, tool, mymop)
+	if(istype(tool, /obj/item/pushbroom))
+		return insert_janitorial_item(user, tool, mybroom)
+	if(istype(tool, /obj/item/storage/bag/trash))
+		return insert_janitorial_item(user, tool, mybag)
+	if(istype(tool, /obj/item/reagent_containers/spray/cleaner))
+		return insert_janitorial_item(user, tool, myspray)
+	if(istype(tool, /obj/item/lightreplacer))
+		return insert_janitorial_item(user, tool, myreplacer)
 
-	if(istype(attacking_item, /obj/item/pushbroom))
-		if(mybroom)
-			balloon_alert(user, "already has \a [mybroom]!")
-		else if(user.transferItemToLoc(attacking_item, src))
-			balloon_alert(user, "placed [attacking_item]")
-		return
-
-	if(istype(attacking_item, /obj/item/storage/bag/trash))
-		if(mybag)
-			balloon_alert(user, "already has \a [mybag]!")
-		else if(user.transferItemToLoc(attacking_item, src))
-			balloon_alert(user, "attached [attacking_item]")
-		return
-
-	if(istype(attacking_item, /obj/item/reagent_containers/spray/cleaner))
-		if(myspray)
-			balloon_alert(user, "already has \a [myspray]!")
-		else if(user.transferItemToLoc(attacking_item, src))
-			balloon_alert(user, "placed [attacking_item]")
-		return
-
-	if(istype(attacking_item, /obj/item/lightreplacer))
-		if(myreplacer)
-			balloon_alert(user, "already has \a [myreplacer]!")
-		else if(user.transferItemToLoc(attacking_item, src))
-			balloon_alert(user, "placed [attacking_item]")
-		return
-
-	else if(istype(attacking_item, /obj/item/clothing/suit/caution))
+	if(istype(tool, /obj/item/clothing/suit/caution))
 		if(held_signs.len >= max_signs)
 			balloon_alert(user, "sign rack is full!")
-		else if(user.transferItemToLoc(attacking_item, src))
-			balloon_alert(user, "placed [attacking_item]")
-		return
+			return ITEM_INTERACT_BLOCKING
+		return insert_janitorial_item(user, tool)
 
-	return ..()
+/obj/structure/mop_bucket/janitorialcart/proc/insert_janitorial_item(mob/living/user, obj/item/inserted_item, obj/item/current_item)
+	if(current_item)
+		balloon_alert(user, "already has \a [current_item]!")
+		return ITEM_INTERACT_BLOCKING
+	if(!user.transferItemToLoc(inserted_item, src))
+		balloon_alert(user, "can't place!")
+		return ITEM_INTERACT_BLOCKING
+	
+	balloon_alert(user, "placed [inserted_item]")
+	return ITEM_INTERACT_SUCCESS
+
+/obj/structure/mop_bucket/janitorialcart/base_item_interaction(mob/living/user, obj/item/tool, list/modifiers)
+	. = ..()
+	if(.)
+		return .
+
+	// At the end of base_item_interaction so trash bag insertion doesn't block other interactions like reagent transfer
+	var/is_right_clicking = text2num(LAZYACCESS(modifiers, RIGHT_CLICK))
+	if(is_right_clicking && mybag)
+		return mybag.atom_storage?.item_interact_insert(user, tool)
+
+	return NONE
 
 /obj/structure/mop_bucket/janitorialcart/crowbar_act(mob/living/user, obj/item/tool)
 	if(!CART_HAS_MINIMUM_REAGENT_VOLUME)
@@ -240,20 +253,6 @@
 		reagents.clear_reagents()
 		update_appearance(UPDATE_OVERLAYS)
 	return ITEM_INTERACT_SUCCESS
-
-/obj/structure/mop_bucket/janitorialcart/attackby_secondary(obj/item/weapon, mob/user, params)
-	. = ..()
-	if(. == SECONDARY_ATTACK_CANCEL_ATTACK_CHAIN)
-		return SECONDARY_ATTACK_CANCEL_ATTACK_CHAIN
-
-	if(istype(weapon, /obj/item/reagent_containers))
-		update_appearance(UPDATE_OVERLAYS)
-		return SECONDARY_ATTACK_CONTINUE_CHAIN //so we can empty the cart via our afterattack without trying to put the item in the bag
-
-	if(mybag?.attackby(weapon, user))
-		return SECONDARY_ATTACK_CANCEL_ATTACK_CHAIN
-
-	return SECONDARY_ATTACK_CONTINUE_CHAIN
 
 /obj/structure/mop_bucket/janitorialcart/attack_hand(mob/user, list/modifiers)
 	. = ..()
