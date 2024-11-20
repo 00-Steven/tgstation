@@ -513,6 +513,7 @@
 	examine_desc = "has a few frayed wires sticking out"
 	treat_text = "Replacing of damaged wiring, though repairs via wirecutting instruments or sutures may suffice, albeit at limited efficiency. In case of emergency, \
 				subject may be subjected to high temperatures to allow solder to reset."
+	treat_text_short = "Replace damaged wiring."
 
 	sound_effect = 'modular_doppler/modular_medical/wounds/synth/sound/robotic_slash_T1.ogg'
 
@@ -556,6 +557,7 @@
 	occur_text = "sends some electrical fiber in the direction of the blow, beginning to profusely spark"
 	examine_desc = "has multiple severed wires visible to the outside"
 	treat_text = "Containment of damaged wiring via gauze, then application of fresh wiring/sutures, or resetting of displaced wiring via wirecutter/retractor."
+	treat_text_short = "Settle wiring with gauze, then replace damaged wiring."
 
 	sound_effect = 'modular_doppler/modular_medical/wounds/synth/sound/robotic_slash_T2.ogg'
 

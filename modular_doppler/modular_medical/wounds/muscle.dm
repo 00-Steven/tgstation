@@ -127,6 +127,7 @@
 	name = "Muscle Tear"
 	desc = "Patient's muscle has torn, causing serious pain and reduced limb functionality."
 	treat_text = "A tight splint on the affected limb, as well as plenty of rest and sleep."
+	treat_text_short = "Apply splint or gauze sling, and tell patient to rest."
 	examine_desc = "appears unnaturallly red and swollen"
 	occur_text = "swells up, its skin turning red"
 	severity = WOUND_SEVERITY_MODERATE
@@ -152,6 +153,7 @@
 	sound_effect = 'sound/effects/wounds/blood2.ogg'
 	desc = "Patient's tendon has been severed, causing significant pain and near uselessness of limb."
 	treat_text = "A tight splint on the affected limb, as well as plenty of rest and sleep."
+	treat_text_short = "Apply splint or gauze sling, and tell patient to rest."
 	examine_desc = "is limp and awkwardly twitching, skin swollen and red"
 	occur_text = "twists in pain and goes limp, its tendon ruptured"
 	severity = WOUND_SEVERITY_SEVERE

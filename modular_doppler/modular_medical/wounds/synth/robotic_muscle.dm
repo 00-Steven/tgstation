@@ -8,6 +8,7 @@
 	name = "Overworked Servo"
 	desc = "A servo has been overworked, and will operate with reduced efficiency until rested."
 	treat_text = "A tight splint on the affected limb, as well as plenty of rest and sleep."
+	treat_text_short = "Apply splint or gauze sling, and tell patient to rest."
 	examine_desc = "appears to be moving sluggishly"
 	occur_text = "jitters for a moment before moving sluggishly"
 	severity = WOUND_SEVERITY_MODERATE
@@ -28,6 +29,7 @@
 	sound_effect = 'sound/effects/wounds/blood2.ogg'
 	desc = "An important hydraulic piston has been critically overused, resulting in total dysfunction until it recovers."
 	treat_text = "A tight splint on the affected limb, as well as plenty of rest and sleep."
+	treat_text_short = "Apply splint or gauze sling, and tell patient to rest."
 	examine_desc = "is stiffly limp, the extremities splayed out widely"
 	occur_text = "goes completely stiff, seeming to lock into position"
 	severity = WOUND_SEVERITY_SEVERE

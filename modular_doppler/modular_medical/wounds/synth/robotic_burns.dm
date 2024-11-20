@@ -11,6 +11,7 @@
 
 /datum/wound/burn/robotic/overheat
 	treat_text = "Introduction of a cold environment or lowering of body temperature."
+	treat_text_short = "Reduce patient body temperature."
 
 	simple_desc = "Metals are overheated, increasing damage taken significantly and raising body temperature!"
 	simple_treat_text = "Ideally <b>cryogenics</b>, but any source of <b>low body temperature</b> can work. <b>Spraying</b> with <b>spray bottles/extinguishers/showers</b> \
@@ -344,6 +345,7 @@
 	occur_text = "lets out a slight groan as it turns a dull shade of thermal red"
 	examine_desc = "is glowing a dull thermal red and giving off heat"
 	treat_text = "Reduction of body temperature to expedite the passive heat dissipation - or, if thermal shock is to be risked, application of a fire extinguisher/shower."
+	treat_text_short = "Reduce patient body temperature."
 	severity = WOUND_SEVERITY_MODERATE
 
 	damage_multiplier_penalty = 1.15 //1.15x damage taken
@@ -394,6 +396,7 @@
 	examine_desc = "appears discolored and polychromatic, parts of it glowing a dull orange"
 	treat_text = "Isolation from physical hazards, and accommodation of passive heat dissipation - active cooling may be used, but temperature differentials significantly \
 		raise the risk of thermal shock."
+	treat_text_short = "Isolate patient and reduce body temperature. Active cooling risky."
 	severity = WOUND_SEVERITY_SEVERE
 
 	a_or_from = "from"
@@ -438,6 +441,7 @@
 	examine_desc = "is a blinding shade of white, almost melting from the heat"
 	treat_text = "Immediate confinement to cryogenics, as rapid overheating and physical vulnerability may occur. Active cooling is not advised, \
 		since the thermal shock may be lethal with such a temperature differential."
+	treat_text_short = "Place patient into cryogenics immediately. Active cooling inadvised."
 	severity = WOUND_SEVERITY_CRITICAL
 
 	a_or_from = "from"
