@@ -6767,6 +6767,7 @@
 #include "modular_doppler\autotransfer\autotransfer_config.dm"
 #include "modular_doppler\autotransfer\shuttle.dm"
 #include "modular_doppler\autotransfer\transfer_vote.dm"
+#include "modular_doppler\basic_all_access\airlock_overrides.dm"
 #include "modular_doppler\big_borg_lmao\code\robot.dm"
 #include "modular_doppler\big_borg_lmao\code\robot_defines.dm"
 #include "modular_doppler\big_borg_lmao\code\robot_model.dm"

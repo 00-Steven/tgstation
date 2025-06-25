@@ -532,6 +532,10 @@
 				light_state = AIRLOCK_LIGHT_BOLTS
 			else if(emergency)
 				light_state = AIRLOCK_LIGHT_EMERGENCY
+			// DOPPLER EDIT START
+			else if(access_unlocked)
+				light_state = AIRLOCK_LIGHT_EMERGENCY
+			// DOPPLER EDIT END
 		if(AIRLOCK_DENY)
 			frame_state = AIRLOCK_FRAME_CLOSED
 			light_state = AIRLOCK_LIGHT_DENIED

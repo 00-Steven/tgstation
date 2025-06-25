@@ -192,6 +192,9 @@
 		airlock.wires.cut(WIRE_AI)
 	if(airlock.autoname)
 		airlock.name = get_area_name(src, TRUE)
+	// DOPPLER EDIT START
+	airlock.set_access_lockability()
+	// DOPPLER EDIT END
 	airlock.update_appearance()
 	qdel(src)
 
