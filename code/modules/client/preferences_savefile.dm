@@ -369,6 +369,7 @@ SAVEFILE UPDATING/VERSIONING - 'Simplified', or rather, more coder-friendly ~Car
 	//preference updating will handle saving the updated data for us.
 	if(SHOULD_UPDATE_DATA(data_validity_integer))
 		update_character(data_validity_integer, save_data)
+	check_doppler_character_savefile(save_data) // DOPPLER EDIT ADDITION - Character Savefile Migration
 
 	//Sanitize
 	randomise = SANITIZE_LIST(randomise)
