@@ -172,7 +172,8 @@
 		if(SATURATION_OVERRIDE)
 			var/added_saturation = saturation * 0.75
 			var/deducted_light = saturation * 0.5
-			var/light_shift = (lightness - 0.5) * 0.5 // Lightness values above half increase, below decrease
+			var/half_light = lightness - 0.5 // Lightness values above half increase, below decrease
+			var/light_shift = half_light * 0.5 // Avoid dipping too far, as to not make things pitch black
 			saturation = min(saturation, 1 - added_saturation)
 			new_matrix = list(
 				0, 0, 0, // Ignore original hue
