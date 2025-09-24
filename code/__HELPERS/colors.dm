@@ -157,7 +157,7 @@
  * without making it a deep fried blob of color
  * saturation_behavior determines how we handle color saturation:
  * SATURATION_MULTIPLY - Multiply pixel's saturation by color's saturation. Paints accents while keeping dim areas dim.
- * SATURATION_OVERRIDE- Affects original lightness/saturation to ensure that pale objects still get doused in color
+ * SATURATION_OVERRIDE - Affects original lightness/saturation to ensure that pale objects still get doused in color
  */
 /proc/color_transition_filter(new_color, saturation_behavior = SATURATION_MULTIPLY)
 	if (islist(new_color))
@@ -165,19 +165,30 @@
 	new_color = rgb2num(new_color, COLORSPACE_HSL)
 	var/hue = new_color[1] / 360
 	var/saturation = new_color[2] / 100
-	var/added_saturation = 0
-	var/deducted_light = 0
-	if (saturation_behavior == SATURATION_OVERRIDE)
-		added_saturation = saturation * 0.75
-		deducted_light = saturation * 0.5
-		saturation = min(saturation, 1 - added_saturation)
+	var/lightness = new_color[3] / 100
+	var/list/new_matrix
 
-	var/list/new_matrix = list(
-		0, 0, 0, // Ignore original hue
-		0, saturation, 0, // Multiply the saturation by ours
-		0, 0, 1 - deducted_light, // If we're highly saturated then remove a bit of lightness to keep some color in
-		hue, added_saturation, 0, // And apply our preferred hue and some saturation if we're oversaturated
-	)
+	switch(saturation_behavior)
+		if(SATURATION_OVERRIDE)
+			var/added_saturation = saturation * 0.75
+			var/deducted_light = saturation * 0.5
+			var/light_shift = (lightness - 0.5) * 0.5 // Lightness values above half increase, below decrease
+			saturation = min(saturation, 1 - added_saturation)
+			new_matrix = list(
+				0, 0, 0, // Ignore original hue
+				0, saturation, 0, // Multiply the saturation by ours
+				0, 0, 1 - deducted_light, // If we're highly saturated then remove a bit of lightness to keep some color in
+				hue, added_saturation, light_shift, // And apply our preferred hue, some saturation if we're oversaturated, and shift lighting
+			)
+		if(SATURATION_MULTIPLY)
+			var/sat_to_light = lightness - 0.5 // Lightness values above half increase, below decrease
+			new_matrix = list(
+				0, 0, 0, // Ignore original hue
+				0, saturation, sat_to_light, // Multiply the saturation by ours, and add lightness where it's saturated
+				0, 0, 1, // Keep the lightness
+				hue, 0, 0, // Apply our preferred hue
+			)
+
 	return color_matrix_filter(new_matrix, FILTER_COLOR_HSL)
 
 /// Applies a color filter to a hex/RGB list color
