@@ -374,6 +374,7 @@ SAVEFILE UPDATING/VERSIONING - 'Simplified', or rather, more coder-friendly ~Car
 	//preference updating will handle saving the updated data for us.
 	if(SHOULD_UPDATE_DATA(data_validity_integer))
 		update_character(data_validity_integer, save_data)
+	check_doppler_character_savefile(save_data) // DOPPLER EDIT ADDITION - Modular Character Savefile Migration
 
 	//Sanitize
 	randomise = SANITIZE_LIST(randomise)
@@ -435,9 +436,7 @@ SAVEFILE UPDATING/VERSIONING - 'Simplified', or rather, more coder-friendly ~Car
 
 	//Quirks
 	save_data["all_quirks"] = all_quirks
-	save_data["languages"] = languages // DOPPLER SHIFT ADDITION - we might want to migrate this
-	save_data["alt_job_titles"] = alt_job_titles // DOPPLER SHIFT ADDITION: alt job titles
-	save_data["powers"] = powers // dopplor powerz :3c
+	save_character_doppler(save_data) // DOPPLER ADDITION - Modular Savefile
 
 	return TRUE
 
