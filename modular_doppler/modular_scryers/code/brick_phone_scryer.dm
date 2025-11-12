@@ -431,7 +431,7 @@
 /obj/item/brick_phone_scryer/proc/update_link_visual()
 	if(QDELETED(mod_link.link_call))
 		return
-	var/mob/living/user = loc
+	var/mob/living/user = get_user()
 	mod_link.visual.cut_overlay(mod_link.visual_overlays)
 	mod_link.visual_overlays = user.overlays - user.active_thinking_indicator
 	mod_link.visual.add_overlay(mod_link.visual_overlays)
