@@ -108,6 +108,18 @@ GLOBAL_LIST_INIT_TYPED(cell_line_tables, /list, list(
 		/datum/micro_organism/cell_line/organs/stomach = 3,
 		/datum/micro_organism/cell_line/organs/stomach/evolved = 1,
 	),
+	CELL_LINE_ORGAN_APPENDIX_EVOLVED = list(
+		/datum/micro_organism/cell_line/organs/appendix = 1,
+		/datum/micro_organism/cell_line/organs/appendix/evolved = 1,
+	),
+	CELL_LINE_ORGAN_APPENDIX_PICKLE = list(
+		/datum/micro_organism/cell_line/organs/appendix = 1,
+		/datum/micro_organism/cell_line/organs/appendix/evolved/pickle = 1,
+	),
+	CELL_LINE_ORGAN_APPENDIX_SAUSAGE = list(
+		/datum/micro_organism/cell_line/organs/appendix = 1,
+		/datum/micro_organism/cell_line/organs/appendix/evolved/sausage = 1,
+	),
 ))
 
 ///Assoc list of cell virus define | assoc list of datum | cell_virus

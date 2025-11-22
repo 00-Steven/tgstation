@@ -405,3 +405,43 @@
 	if(maxHealth - damage <= damage_per_block)
 		return FALSE
 	return TRUE
+
+/// A larger version of the organic heart, bigger in every single way
+/obj/item/organ/heart/mega
+	name = "mega heart"
+	desc = "It beats way too strong."
+	icon_state = "heart-mega-on"
+	base_icon_state = "heart-mega"
+
+	maxHealth = STANDARD_ORGAN_THRESHOLD * 2
+	healing_factor = STANDARD_ORGAN_HEALING * 2
+	// 2x the dimensions is 8x the volume.
+	food_reagents = list(/datum/reagent/consumable/nutriment/organ_tissue = 40, /datum/reagent/love = 20)
+	reagent_vol = 60
+	// There's *so* much love in this heart.
+	organ_traits = list(TRAIT_FRIENDLY)
+
+	/// Loudly audible looping heartbeat sound
+	var/datum/looping_sound/heartbeat/personal/external_heartbeat_loop
+
+/obj/item/organ/heart/mega/Initialize(mapload)
+	. = ..()
+	external_heartbeat_loop = new(src, start_immediately = FALSE)
+	// Maybe constantly pump blood, if you have too much blood increase the heartbeat speed in stages, until the heart explodes.
+	// Make it real bloody like a bloodroach but for your own blood?
+
+/obj/item/organ/heart/mega/Destroy()
+	QDEL_NULL(external_heartbeat_loop)
+	return ..()
+
+/obj/item/organ/heart/mega/Stop()
+	. = ..()
+	if(!.)
+		return
+	external_heartbeat_loop.stop()
+
+/obj/item/organ/heart/mega/Restart()
+	. = ..()
+	if(!.)
+		return
+	external_heartbeat_loop.start()

@@ -64,6 +64,10 @@
 
 #define CELL_LINE_ORGAN_HEART_CURSED "cell_line_organ_heart_cursed"
 
+#define CELL_LINE_ORGAN_APPENDIX_EVOLVED "cell_line_organ_appendix_evolved"
+#define CELL_LINE_ORGAN_APPENDIX_PICKLE "cell_line_organ_appendix_pickle"
+#define CELL_LINE_ORGAN_APPENDIX_SAUSAGE "cell_line_organ_appendix_sausage"
+
 //! All cell virus types
 #define CELL_VIRUS_TABLE_GENERIC "cell_virus_generic_table"
 #define CELL_VIRUS_TABLE_GENERIC_MOB "cell_virus_generic_mob_table"

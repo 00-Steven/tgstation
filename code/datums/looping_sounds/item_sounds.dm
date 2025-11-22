@@ -22,6 +22,11 @@
 	mid_sounds = list('sound/effects/singlebeat.ogg' = 1)
 	mid_length = 1 SECONDS
 
+/datum/looping_sound/heartbeat/personal
+	mid_length = 1.2 SECONDS
+	volume = 40
+	extra_range = SILENCED_SOUND_EXTRARANGE
+
 /datum/looping_sound/trapped_machine_beep
 	mid_sounds = list('sound/machines/beep/beep.ogg' = 1)
 	mid_length = 10 SECONDS

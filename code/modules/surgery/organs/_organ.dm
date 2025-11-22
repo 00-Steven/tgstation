@@ -98,8 +98,7 @@ INITIALIZE_IMMEDIATE(/obj/item/organ)
 	if(bodypart_overlay)
 		setup_bodypart_overlay()
 
-	if(cell_line && (organ_flags & ORGAN_ORGANIC))
-		AddElement(/datum/element/swabable, cell_line, cell_line_amount = rand(cells_minimum, cells_maximum))
+	make_swabable()
 
 	START_PROCESSING(SSobj, src)
 
@@ -114,6 +113,14 @@ INITIALIZE_IMMEDIATE(/obj/item/organ)
 	else
 		STOP_PROCESSING(SSobj, src)
 	return ..()
+
+/// Make ourselves swabable if needed.
+/obj/item/organ/proc/make_swabable()
+	if(isnull(cell_line))
+		return
+	if(!(organ_flags & ORGAN_ORGANIC))
+		return
+	AddElement(/datum/element/swabable, cell_line, cell_line_amount = rand(cells_minimum, cells_maximum))
 
 /// Add a Trait to an organ that it will give its owner.
 /obj/item/organ/proc/add_organ_trait(trait)
