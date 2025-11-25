@@ -33,6 +33,8 @@ LINEN BINS
 	var/stack_amount = 3
 	/// Denotes if the bedsheet is a single, double, or other kind of bedsheet
 	var/bedsheet_type = BEDSHEET_SINGLE
+	/// Keeps track of the sheets we've precariously piled on top of each other
+	var/list/stacked_sheets = list()
 	var/datum/weakref/signal_sleeper //this is our goldylocks
 
 /obj/item/bedsheet/Initialize(mapload)
@@ -59,12 +61,29 @@ LINEN BINS
 
 	return NONE
 
+/obj/item/bedsheet/update_overlays()
+	. = ..()
+
+	var/sheet_offset = 0
+	for(var/obj/item/bedsheet/stacked_sheet in stacked_sheets)
+		sheet_offset += 3
+		var/mutable_appearance/sheet_overlay = mutable_appearance(stacked_sheet.icon, stacked_sheet.icon_state, layer = layer + (sheet_offset * 0.01))
+		sheet_overlay.pixel_y = sheet_offset
+		. += sheet_overlay
+
 /obj/item/bedsheet/interact_with_atom_secondary(atom/interacting_with, mob/living/user, list/modifiers)
 	if(!isliving(interacting_with))
 		return NONE
 	var/mob/living/to_cover = interacting_with
 	if(to_cover.body_position != LYING_DOWN)
 		return ITEM_INTERACT_BLOCKING
+
+	// If there's an existing sheet stack, stack further
+	var/obj/item/bedsheet/found_sheet_stack = find_existing_stack(user)
+	if(found_sheet_stack)
+		return found_sheet_stack.bedsheet_stack_act(user, src)
+
+	// Otherwise, continue to covering
 	if(!user.dropItemToGround(src))
 		return ITEM_INTERACT_BLOCKING
 
@@ -76,6 +95,9 @@ LINEN BINS
 	return ITEM_INTERACT_SUCCESS
 
 /obj/item/bedsheet/item_interaction(mob/living/user, obj/item/tool, list/modifiers)
+	if(istype(tool, /obj/item/bedsheet))
+		return bedsheet_stack_act(user, tool)
+
 	// Handle wirecutters here so we still tear it up in combat mode
 	if(tool.tool_behaviour != TOOL_WIRECUTTER && !tool.get_sharpness())
 		return NONE
@@ -92,6 +114,33 @@ LINEN BINS
 	qdel(src)
 	return ITEM_INTERACT_SUCCESS
 
+/obj/item/bedsheet/proc/bedsheet_stack_act(mob/living/user, obj/item/bedsheet/new_bedsheet)
+	if(!isturf(loc))
+		return ITEM_INTERACT_BLOCKING
+	if(!user.transferItemToLoc(new_bedsheet, src, silent = FALSE))
+		return ITEM_INTERACT_BLOCKING
+	stacked_sheets += new_bedsheet
+	update_appearance()
+	return ITEM_INTERACT_SUCCESS
+
+/obj/item/bedsheet/proc/find_existing_stack(mob/living/sleeper)
+	// First check for existing sheets to stack onto
+	for(var/obj/item/bedsheet/possible_sheet in sleeper.loc?.contents)
+		if(!istype(possible_sheet))
+			continue
+		var/mob/living/found_sleeper = possible_sheet.signal_sleeper?.resolve()
+		if(sleeper == found_sleeper)
+			return possible_sheet
+
+/obj/item/bedsheet/attempt_pickup(mob/user, skip_grav)
+	if(!stacked_sheets.len)
+		return ..()
+	var/obj/item/bedsheet/top_sheet = stacked_sheets[length(stacked_sheets)]
+	top_sheet.attempt_pickup(user, skip_grav)
+	if(!(top_sheet in contents))
+		stacked_sheets -= top_sheet
+		update_appearance()
+
 /obj/item/bedsheet/attack_self(mob/living/user)
 	if(!user.CanReach(src)) //No telekinetic grabbing.
 		return
@@ -100,40 +149,159 @@ LINEN BINS
 	if(!user.dropItemToGround(src))
 		return
 
-	coverup(user)
+	var/obj/item/bedsheet/found_sheet_stack = find_existing_stack(user)
+	if(found_sheet_stack) // If there's an existing sheet stack, stack further
+		found_sheet_stack.bedsheet_stack_act(user, src)
+	else // Otherwise, continue to covering
+		coverup(user)
 	add_fingerprint(user)
 
 /obj/item/bedsheet/click_alt(mob/living/user)
 	setDir(REVERSE_DIR(dir))
 	return CLICK_ACTION_SUCCESS
 
+///obj/item/bedsheet/CanAllowThrough(atom/movable/mover, border_dir)
+//	. = ..()
+//	message_admins("on_attempted_pass -<br>mover: [mover]<br>border_dir: [border_dir]<br>src: [src]")
+//	if(!stacked_sheets.len)
+//		message_admins("on_attempted_pass - first_if")
+//		return .
+//	if(signal_sleeper?.resolve() != mover)
+//		message_admins("on_attempted_pass - second_if")
+//		return .
+//
+//	var/stuck_prob = min(10 + stacked_sheets.len * 10, 100)
+//	message_admins("on_attempted_pass - stuck_prob: [stuck_prob]")
+//	if(!prob(stuck_prob))
+//		message_admins("on_attempted_pass - prob_if")
+//		return .
+//
+//	src.balloon_alert(mover, "stuck in bed!")
+//	mover.Shake(duration = 0.1 SECONDS)
+//	return FALSE
+
+/obj/item/bedsheet/Moved(atom/old_loc, movement_dir, forced, list/old_locs, momentum_change = TRUE)
+	. = ..()
+	attempt_disperse_bedsheets()
+
+/obj/item/bedsheet/proc/attempt_disperse_bedsheets()
+	if(!stacked_sheets.len)
+		return
+
+	visible_message(span_warning("The bedsheets fall everywhere!"))
+	var/stack_height = 1
+	for(var/obj/item/bedsheet/stacked_sheet in stacked_sheets)
+		var/fall_dir = pick(GLOB.alldirs)
+		step(stacked_sheet, fall_dir)
+
+		if(prob(10 * stack_height - 10)) // Sometimes move further, based on height
+			step(stacked_sheet, fall_dir)
+
+		stacked_sheet.do_tumble_effects(x, y, fall_dir, stack_height)
+		stack_height++
+		stacked_sheets -= stacked_sheet
+	update_appearance()
+
+/obj/item/bedsheet/proc/do_tumble_effects(origin_x, origin_y, fall_dir, stack_height)
+	var/old_pixel_x = pixel_x
+	var/old_pixel_y = pixel_y
+	if(!(item_flags & NO_PIXEL_RANDOM_DROP))
+		old_pixel_x = base_pixel_x + rand(-6, 6)
+		old_pixel_y = base_pixel_y + rand(-6, 6)
+
+	pixel_x = base_pixel_x + (origin_x * 32) - (x * 32)
+	pixel_y = base_pixel_y + (origin_y * 32) - (y * 32) + stack_height * 3
+
+	animate(
+		src,
+		pixel_x = old_pixel_x,
+		pixel_y = old_pixel_y,
+		time = 0.5 SECONDS,
+		easing = CUBIC_EASING|EASE_OUT,
+		flags = ANIMATION_PARALLEL,
+	)
+	SpinAnimation(0.5 SECONDS, 1, fall_dir & EAST)
+	playsound(src, drop_sound, DROP_SOUND_VOLUME, ignore_walls = FALSE)
+
 /obj/item/bedsheet/proc/coverup(mob/living/sleeper)
 	layer = ABOVE_MOB_LAYER
 	pixel_x = 0
 	pixel_y = 0
 	pixel_z = sleeper.pixel_z // Account for possible mob elevation
+	update_appearance()
 	balloon_alert(sleeper, "covered")
 	var/angle = sleeper.lying_prev
 	dir = angle2dir(angle + 180) // 180 flips it to be the same direction as the mob
 
 	signal_sleeper = WEAKREF(sleeper)
 	RegisterSignal(src, COMSIG_ITEM_PICKUP, PROC_REF(on_pickup))
+	//RegisterSignal(src, COMSIG_ATOM_TRIED_PASS, PROC_REF(on_attempted_pass))
+	RegisterSignal(src, COMSIG_ATOM_EXIT, PROC_REF(on_attempted_exit))
 	RegisterSignal(sleeper, COMSIG_MOVABLE_MOVED, PROC_REF(smooth_sheets))
 	RegisterSignal(sleeper, COMSIG_LIVING_SET_BODY_POSITION, PROC_REF(smooth_sheets))
 	RegisterSignal(sleeper, COMSIG_QDELETING, PROC_REF(smooth_sheets))
+
+	var/static/list/loc_connections = list(
+			COMSIG_ATOM_EXIT = PROC_REF(on_attempted_exit),
+		)
+	AddElement(/datum/element/connect_loc, loc_connections)
+
+/obj/item/bedsheet/proc/on_attempted_exit(datum/source, atom/movable/leaving, direction)
+	message_admins("on_attempted_pass -<br>leaving: [leaving]<br>source: [source]<br>src: [src]")
+	if(!stacked_sheets.len)
+		message_admins("on_attempted_pass - first_if")
+		return
+	var/mob/living/sleeper = signal_sleeper?.resolve()
+	if(sleeper != leaving)
+		message_admins("on_attempted_pass - second_if")
+		return
+
+	var/stuck_prob = min(10 + stacked_sheets.len * 10, 100)
+	message_admins("on_attempted_pass - stuck_prob: [stuck_prob]")
+	if(!prob(stuck_prob))
+		message_admins("on_attempted_pass - prob_if")
+		return
+
+	src.balloon_alert(sleeper, "stuck in bed!")
+	sleeper.set_lying_angle(dir2angle(dir) - 180)
+	sleeper.Shake(duration = 0.1 SECONDS)
+	return COMPONENT_ATOM_BLOCK_EXIT
+
+/obj/item/bedsheet/proc/on_attempted_pass(datum/source, mob/living/sleeper, border_dir)
+	message_admins("on_attempted_pass -<br>sleeper: [sleeper]<br>source: [source]<br>src: [src]")
+	if(!stacked_sheets.len)
+		message_admins("on_attempted_pass - first_if")
+		return COMSIG_COMPONENT_PERMIT_PASSAGE
+	if(signal_sleeper?.resolve() != sleeper)
+		message_admins("on_attempted_pass - second_if")
+		return COMSIG_COMPONENT_PERMIT_PASSAGE
+
+	var/stuck_prob = min(10 + stacked_sheets.len * 10, 100)
+	message_admins("on_attempted_pass - stuck_prob: [stuck_prob]")
+	if(!prob(stuck_prob))
+		message_admins("on_attempted_pass - prob_if")
+		return COMSIG_COMPONENT_PERMIT_PASSAGE
+
+	src.balloon_alert(sleeper, "stuck in bed!")
+	sleeper.Shake(duration = 0.1 SECONDS)
+	return COMSIG_COMPONENT_REFUSE_PASSAGE
 
 /obj/item/bedsheet/proc/smooth_sheets(mob/living/sleeper)
 	SIGNAL_HANDLER
 
 	UnregisterSignal(src, COMSIG_ITEM_PICKUP)
+	//UnregisterSignal(src, COMSIG_ATOM_TRIED_PASS)
 	UnregisterSignal(sleeper, COMSIG_MOVABLE_MOVED)
 	UnregisterSignal(sleeper, COMSIG_LIVING_SET_BODY_POSITION)
 	UnregisterSignal(sleeper, COMSIG_QDELETING)
-	balloon_alert(sleeper, "smoothed sheets")
+	RemoveElement(/datum/element/connect_loc)
+	balloon_alert(sleeper, stacked_sheets.len ? "freedom!": "smoothed sheets")
 	layer = initial(layer)
 	SET_PLANE_IMPLICIT(src, initial(plane))
 	pixel_z = 0
+	update_appearance()
 	signal_sleeper = null
+	attempt_disperse_bedsheets()
 
 // We need to do this in case someone picks up a bedsheet while a mob is covered up
 // otherwise the bedsheet will disappear while in our hands if the sleeper signals get activated by moving
@@ -143,9 +311,11 @@ LINEN BINS
 	var/mob/living/sleeper = signal_sleeper?.resolve()
 
 	UnregisterSignal(src, COMSIG_ITEM_PICKUP)
+	UnregisterSignal(src, COMSIG_ATOM_TRIED_PASS)
 	UnregisterSignal(sleeper, COMSIG_MOVABLE_MOVED)
 	UnregisterSignal(sleeper, COMSIG_LIVING_SET_BODY_POSITION)
 	UnregisterSignal(sleeper, COMSIG_QDELETING)
+	RemoveElement(/datum/element/connect_loc)
 	pixel_z = 0
 	signal_sleeper = null
 
