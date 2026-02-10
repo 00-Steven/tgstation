@@ -39,9 +39,10 @@
 /// Overrides Move to Pixel Shift.
 /datum/component/pixel_shift/proc/pre_move_check(mob/source, new_loc, direct)
 	SIGNAL_HANDLER
-	if(shifting)
-		pixel_shift(source, direct)
-		return COMSIG_MOB_CLIENT_BLOCK_PRE_LIVING_MOVE
+	if(!shifting)
+		return NONE
+	pixel_shift(source, direct)
+	return COMSIG_MOB_CLIENT_BLOCK_PRE_LIVING_MOVE
 
 /// Checks if the parent is considered passthroughable from a direction. Projectiles will ignore the check and hit.
 /datum/component/pixel_shift/proc/check_passable(mob/source, atom/movable/mover, border_dir)
@@ -52,6 +53,9 @@
 /// Activates Pixel Shift on Keybind down. Only Pixel Shift movement will be allowed.
 /datum/component/pixel_shift/proc/pixel_shift_down()
 	SIGNAL_HANDLER
+	var/mob/living/living_parent = parent
+	if(!living_parent.can_pixel_shift_self())
+		return NONE
 	shifting = TRUE
 	return COMSIG_KB_ACTIVATED
 
