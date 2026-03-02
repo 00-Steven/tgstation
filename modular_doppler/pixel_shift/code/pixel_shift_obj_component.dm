@@ -152,10 +152,28 @@
 /// Sets our pixel offsets, accounting for use_xy.
 /datum/component/obj_pixel_shift/proc/update_offsets(animate = FALSE)
 	var/obj/obj_parent = parent
+	var/new_x = obj_parent.pixel_x
+	var/new_y = obj_parent.pixel_y
+	var/new_w = obj_parent.pixel_w
+	var/new_z = obj_parent.pixel_z
+
 	if(use_xy)
-		obj_parent.pixel_x = pixel_shift_horizontal + obj_parent.base_pixel_x
-		obj_parent.pixel_y = pixel_shift_vertical + obj_parent.base_pixel_y
+		new_x = pixel_shift_horizontal + obj_parent.base_pixel_x
+		new_y = pixel_shift_vertical + obj_parent.base_pixel_y
 	else
-		obj_parent.pixel_w = pixel_shift_horizontal + obj_parent.base_pixel_w
-		obj_parent.pixel_z = pixel_shift_vertical + obj_parent.base_pixel_x
-	// TODO: ANIMATE CALL
+		new_w = pixel_shift_horizontal + obj_parent.base_pixel_w
+		new_z = pixel_shift_vertical + obj_parent.base_pixel_x
+
+	// ensures the floating animation doesn't mess with our animation
+	if(HAS_TRAIT(obj_parent, TRAIT_MOVE_FLOATING))
+		ADD_TRAIT(obj_parent, TRAIT_NO_FLOATING_ANIM, UPDATE_OFFSET_TRAIT)
+		addtimer(TRAIT_CALLBACK_REMOVE(obj_parent, TRAIT_NO_FLOATING_ANIM, UPDATE_OFFSET_TRAIT), 0.3 SECONDS, TIMER_UNIQUE|TIMER_OVERRIDE)
+
+	animate(obj_parent,
+		pixel_w = new_w,
+		pixel_x = new_x,
+		pixel_y = new_y,
+		pixel_z = new_z,
+		flags = ANIMATION_PARALLEL,
+		time = UPDATE_TRANSFORM_ANIMATION_TIME,
+	)

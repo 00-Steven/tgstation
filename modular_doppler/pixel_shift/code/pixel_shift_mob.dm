@@ -10,6 +10,7 @@
 	if(istype(active_pad) && active_pad.masters[src])
 		var/obj/effect/overlay/holo_pad_hologram/ai_holo = active_pad.masters[src]
 		ai_holo.AddComponent(/datum/component/obj_pixel_shift, src)
+		return
 	return ..()
 
 /mob/living/silicon/pai
