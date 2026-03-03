@@ -19,16 +19,26 @@
 	var/mob/living/proxy
 	/// Whether we use pixel_x and pixel_y instead of pixel_z and pixel_w.
 	var/use_xy = FALSE
-	/// Holder for how the mob is shifted on the z/y axis
-	var/initial_shift_vertical = 0
-	/// holder for how the mob is shifted on the w/x axis
-	var/initial_shift_horizontal = 0
+	/// Whether we can exist independently from our proxy.
+	var/removed_on_proxyloss = TRUE
+	/// Whether we change proxy on pull.
+	var/change_proxy_on_pull = TRUE
+	/// Whether we remove our pixelshift and component when we move.
+	var/remove_shift_on_move = TRUE
+	/// Whether we reset our pixelshift when we lose our proxy.
+	var/reset_shift_on_proxyloss = TRUE
+	/// The callback called after pixel shifting.
+	var/datum/callback/shift_callback
 
 /datum/component/obj_pixel_shift/Initialize(
 	mob/living/proxy,
 	use_xy = FALSE,
 	maximum_pixel_shift = 16,
-	relative_to_initial_offset = FALSE,
+	removed_on_proxyloss = TRUE,
+	change_proxy_on_pull = TRUE,
+	remove_shift_on_move = TRUE,
+	reset_shift_on_proxyloss = TRUE,
+	datum/callback/shift_callback,
 )
 	. = ..()
 	if(!isobj(parent))
@@ -37,42 +47,62 @@
 	src.proxy = proxy
 	src.use_xy = use_xy
 	src.maximum_pixel_shift = maximum_pixel_shift
-	if(relative_to_initial_offset)
-		var/obj/obj_parent = parent
-		if(use_xy)
-			initial_shift_horizontal = obj_parent.pixel_x - obj_parent.base_pixel_x
-			initial_shift_vertical =  obj_parent.pixel_y - obj_parent.base_pixel_y
-		else
-			initial_shift_horizontal = obj_parent.pixel_w - obj_parent.base_pixel_w
-			initial_shift_vertical =  obj_parent.pixel_z - obj_parent.base_pixel_z
-	// TODO: consider pAI card fuckery
+	src.removed_on_proxyloss = removed_on_proxyloss
+	src.change_proxy_on_pull = change_proxy_on_pull
+	src.remove_shift_on_move = remove_shift_on_move
+	src.reset_shift_on_proxyloss = reset_shift_on_proxyloss
+	src.shift_callback = shift_callback
 	// TODO: let it change proxy when pulled?
 	// TODO: var for whether it's hard-locked to the proxy or changes proxy on pull
-	// TODO: var for whether it's
+
+/datum/component/obj_pixel_shift/Destroy()
+	shift_callback = null
+	return ..()
 
 /datum/component/obj_pixel_shift/RegisterWithParent()
-	RegisterSignal(proxy, COMSIG_QDELETING, PROC_REF(on_proxy_delete))
 	RegisterSignal(proxy, COMSIG_KB_MOB_PIXEL_SHIFT_DOWN, PROC_REF(pixel_shift_down))
 	RegisterSignal(proxy, COMSIG_KB_MOB_PIXEL_SHIFT_UP, PROC_REF(pixel_shift_up))
 	RegisterSignal(proxy, COMSIG_MOB_CLIENT_PRE_LIVING_MOVE, PROC_REF(pre_move_check))
 
-	RegisterSignal(parent, COMSIG_MOVABLE_MOVED, PROC_REF(unpixel_shift))
+	if(change_proxy_on_pull)
+		RegisterSignal(parent, COMSIG_ATOM_NO_LONGER_PULLED, PROC_REF(on_stop_pull))
+		// TODO: register getting new proxy on pull?
+	if(removed_on_proxyloss)
+		RegisterSignal(proxy, COMSIG_QDELETING, PROC_REF(on_proxy_delete))
+	if(remove_shift_on_move)
+		RegisterSignal(parent, COMSIG_MOVABLE_MOVED, PROC_REF(unpixel_shift))
 	RegisterSignal(parent, COMSIG_LIVING_CAN_ALLOW_THROUGH, PROC_REF(check_passable))
 
+	var/obj/obj_parent = parent
+	if(use_xy)
+		pixel_shift_horizontal = obj_parent.pixel_x - obj_parent.base_pixel_x
+		pixel_shift_vertical = obj_parent.pixel_y - obj_parent.base_pixel_y
+	else
+		pixel_shift_horizontal = obj_parent.pixel_w - obj_parent.base_pixel_w
+		pixel_shift_vertical = obj_parent.pixel_z - obj_parent.base_pixel_z
+
 /datum/component/obj_pixel_shift/UnregisterFromParent()
-	UnregisterSignal(proxy, COMSIG_QDELETING)
-	UnregisterSignal(proxy, COMSIG_KB_MOB_PIXEL_SHIFT_DOWN)
-	UnregisterSignal(proxy, COMSIG_KB_MOB_PIXEL_SHIFT_UP)
-	UnregisterSignal(proxy, COMSIG_MOB_CLIENT_PRE_LIVING_MOVE)
+	unregister_proxy()
 
 	UnregisterSignal(parent, COMSIG_MOVABLE_MOVED)
 	UnregisterSignal(parent, COMSIG_LIVING_CAN_ALLOW_THROUGH)
 
+/// Unregisters our proxy.
+/datum/component/obj_pixel_shift/proc/unregister_proxy()
+	if(isnull(proxy))
+		return
+	UnregisterSignal(proxy, COMSIG_QDELETING)
+	UnregisterSignal(proxy, COMSIG_KB_MOB_PIXEL_SHIFT_DOWN)
+	UnregisterSignal(proxy, COMSIG_KB_MOB_PIXEL_SHIFT_UP)
+	UnregisterSignal(proxy, COMSIG_MOB_CLIENT_PRE_LIVING_MOVE)
+	proxy = null
+
 /// If the proxy shifting us goes away, makes sure we clean up after ourselves.
 /datum/component/obj_pixel_shift/proc/on_proxy_delete(datum/source)
 	SIGNAL_HANDLER
-	proxy = null
-	reset_offsets()
+	unregister_proxy()
+	if(reset_shift_on_proxyloss)
+		reset_offsets()
 	qdel(src)
 
 /// Overrides Move to Pixel Shift.
@@ -82,6 +112,15 @@
 		return NONE
 	pixel_shift(source, direct)
 	return COMSIG_MOB_CLIENT_BLOCK_PRE_LIVING_MOVE
+
+/datum/component/obj_pixel_shift/proc/on_stop_pull(datum/source, atom/movable/was_pulling)
+	SIGNAL_HANDLER
+	unregister_proxy()
+	if(!removed_on_proxyloss)
+		return
+	if(reset_shift_on_proxyloss)
+		reset_offsets()
+	qdel(src)
 
 /// Checks if the parent is considered passthroughable from a direction. Projectiles will ignore the check and hit.
 /datum/component/obj_pixel_shift/proc/check_passable(mob/source, atom/movable/mover, border_dir)
@@ -103,9 +142,7 @@
 /// Sets parent pixel offsets to default and deletes the component.
 /datum/component/obj_pixel_shift/proc/unpixel_shift()
 	SIGNAL_HANDLER
-	passthroughable = NONE
-	if(is_shifted)
-		reset_offsets()
+	reset_offsets()
 	qdel(src)
 
 /// In-turf pixel movement which can allow things to pass through if the threshold is met.
@@ -145,6 +182,8 @@
 
 /// Resets our pixel offsets.
 /datum/component/obj_pixel_shift/proc/reset_offsets()
+	if(!is_shifted)
+		return
 	pixel_shift_horizontal = 0
 	pixel_shift_vertical = 0
 	update_offsets(animate = TRUE)
@@ -164,16 +203,23 @@
 		new_w = pixel_shift_horizontal + obj_parent.base_pixel_w
 		new_z = pixel_shift_vertical + obj_parent.base_pixel_x
 
-	// ensures the floating animation doesn't mess with our animation
-	if(HAS_TRAIT(obj_parent, TRAIT_MOVE_FLOATING))
-		ADD_TRAIT(obj_parent, TRAIT_NO_FLOATING_ANIM, UPDATE_OFFSET_TRAIT)
-		addtimer(TRAIT_CALLBACK_REMOVE(obj_parent, TRAIT_NO_FLOATING_ANIM, UPDATE_OFFSET_TRAIT), 0.3 SECONDS, TIMER_UNIQUE|TIMER_OVERRIDE)
+	if(animate)
+		// ensures the floating animation doesn't mess with our animation
+		if(HAS_TRAIT(obj_parent, TRAIT_MOVE_FLOATING))
+			ADD_TRAIT(obj_parent, TRAIT_NO_FLOATING_ANIM, UPDATE_OFFSET_TRAIT)
+			addtimer(TRAIT_CALLBACK_REMOVE(obj_parent, TRAIT_NO_FLOATING_ANIM, UPDATE_OFFSET_TRAIT), 0.3 SECONDS, TIMER_UNIQUE|TIMER_OVERRIDE)
+		animate(obj_parent,
+			pixel_w = new_w,
+			pixel_x = new_x,
+			pixel_y = new_y,
+			pixel_z = new_z,
+			flags = ANIMATION_PARALLEL,
+			time = UPDATE_TRANSFORM_ANIMATION_TIME,
+		)
+	else
+		obj_parent.pixel_x = new_x
+		obj_parent.pixel_y = new_y
+		obj_parent.pixel_w = new_w
+		obj_parent.pixel_z = new_z
 
-	animate(obj_parent,
-		pixel_w = new_w,
-		pixel_x = new_x,
-		pixel_y = new_y,
-		pixel_z = new_z,
-		flags = ANIMATION_PARALLEL,
-		time = UPDATE_TRANSFORM_ANIMATION_TIME,
-	)
+	shift_callback?.Invoke(proxy, obj_parent)

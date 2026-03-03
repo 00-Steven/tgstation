@@ -1,4 +1,4 @@
-// Allow AIs to turn their hologram instead on alt-move.
+// Allow AIs to turn their hologram instead with the face direction bind.
 /mob/living/silicon/ai/keybind_face_direction(direction)
 	var/obj/machinery/holopad/active_pad = current
 	if(istype(active_pad) && active_pad.masters[src])
