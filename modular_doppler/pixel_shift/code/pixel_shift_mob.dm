@@ -19,7 +19,7 @@
 
 /// Whether this mob can currently use the standard self-pixelshift. Override for special pixelshift behaviours.
 /mob/proc/can_pixel_shift_self()
-	return TRUE // TODO: send a signal here, and the components hook into it.
+	return TRUE
 
 /mob/living/can_pixel_shift_self()
 	if(pulling)

@@ -15,8 +15,8 @@
 	/// The amount of pixel shift required to make the parent passthroughable.
 	var/passable_shift_threshold = 8
 	
-	/// The proxy that controls our offsets.
-	var/mob/living/proxy
+	/// Weakref to the proxy that controls our offsets.
+	var/datum/weakref/proxy_ref
 	/// Whether we use pixel_x and pixel_y instead of pixel_z and pixel_w.
 	var/use_xy = FALSE
 	/// Whether we can exist independently from our proxy.
@@ -44,7 +44,6 @@
 	if(!isobj(parent))
 		return COMPONENT_INCOMPATIBLE
 
-	src.proxy = proxy
 	src.use_xy = use_xy
 	src.maximum_pixel_shift = maximum_pixel_shift
 	src.removed_on_proxyloss = removed_on_proxyloss
@@ -52,26 +51,25 @@
 	src.remove_shift_on_move = remove_shift_on_move
 	src.reset_shift_on_proxyloss = reset_shift_on_proxyloss
 	src.shift_callback = shift_callback
-	// TODO: let it change proxy when pulled?
-	// TODO: var for whether it's hard-locked to the proxy or changes proxy on pull
+
+	if(proxy)
+		src.proxy_ref = WEAKREF(proxy)
+		register_proxy(proxy)
 
 /datum/component/obj_pixel_shift/Destroy()
 	shift_callback = null
+	proxy_ref = null
 	return ..()
 
 /datum/component/obj_pixel_shift/RegisterWithParent()
-	RegisterSignal(proxy, COMSIG_KB_MOB_PIXEL_SHIFT_DOWN, PROC_REF(pixel_shift_down))
-	RegisterSignal(proxy, COMSIG_KB_MOB_PIXEL_SHIFT_UP, PROC_REF(pixel_shift_up))
-	RegisterSignal(proxy, COMSIG_MOB_CLIENT_PRE_LIVING_MOVE, PROC_REF(pre_move_check))
-
 	if(change_proxy_on_pull)
+		RegisterSignal(parent, COMSIG_LIVING_TRYING_TO_PULL, PROC_REF(on_pull))
 		RegisterSignal(parent, COMSIG_ATOM_NO_LONGER_PULLED, PROC_REF(on_stop_pull))
 		// TODO: register getting new proxy on pull?
-	if(removed_on_proxyloss)
-		RegisterSignal(proxy, COMSIG_QDELETING, PROC_REF(on_proxy_delete))
 	if(remove_shift_on_move)
 		RegisterSignal(parent, COMSIG_MOVABLE_MOVED, PROC_REF(unpixel_shift))
 	RegisterSignal(parent, COMSIG_LIVING_CAN_ALLOW_THROUGH, PROC_REF(check_passable))
+	RegisterSignal(parent, COMSIG_OBJ_DEFAULT_UNFASTEN_WRENCH, PROC_REF(on_default_wrench))
 
 	var/obj/obj_parent = parent
 	if(use_xy)
@@ -83,19 +81,34 @@
 
 /datum/component/obj_pixel_shift/UnregisterFromParent()
 	unregister_proxy()
-
+	UnregisterSignal(parent, COMSIG_ATOM_NO_LONGER_PULLED)
 	UnregisterSignal(parent, COMSIG_MOVABLE_MOVED)
 	UnregisterSignal(parent, COMSIG_LIVING_CAN_ALLOW_THROUGH)
+	UnregisterSignal(parent, COMSIG_OBJ_DEFAULT_UNFASTEN_WRENCH)
+
+/// Registers the given proxy.
+/datum/component/obj_pixel_shift/proc/register_proxy(mob/living/proxy)
+	var/mob/living/old_proxy = proxy_ref?.resolve()
+	if(old_proxy)
+		unregister_proxy()
+
+	proxy_ref = WEAKREF(proxy)
+	RegisterSignal(proxy, COMSIG_KB_MOB_PIXEL_SHIFT_DOWN, PROC_REF(pixel_shift_down))
+	RegisterSignal(proxy, COMSIG_KB_MOB_PIXEL_SHIFT_UP, PROC_REF(pixel_shift_up))
+	RegisterSignal(proxy, COMSIG_MOB_CLIENT_PRE_LIVING_MOVE, PROC_REF(pre_move_check))
+	if(removed_on_proxyloss)
+		RegisterSignal(proxy, COMSIG_QDELETING, PROC_REF(on_proxy_delete))
 
 /// Unregisters our proxy.
 /datum/component/obj_pixel_shift/proc/unregister_proxy()
+	var/mob/living/proxy = proxy_ref?.resolve()
 	if(isnull(proxy))
 		return
 	UnregisterSignal(proxy, COMSIG_QDELETING)
 	UnregisterSignal(proxy, COMSIG_KB_MOB_PIXEL_SHIFT_DOWN)
 	UnregisterSignal(proxy, COMSIG_KB_MOB_PIXEL_SHIFT_UP)
 	UnregisterSignal(proxy, COMSIG_MOB_CLIENT_PRE_LIVING_MOVE)
-	proxy = null
+	proxy_ref = null
 
 /// If the proxy shifting us goes away, makes sure we clean up after ourselves.
 /datum/component/obj_pixel_shift/proc/on_proxy_delete(datum/source)
@@ -113,6 +126,12 @@
 	pixel_shift(source, direct)
 	return COMSIG_MOB_CLIENT_BLOCK_PRE_LIVING_MOVE
 
+/// Handler for when we start being pulled, to set a new proxy link.
+/datum/component/obj_pixel_shift/proc/on_pull(datum/source, atom/movable/puller, force)
+	SIGNAL_HANDLER
+	register_proxy(puller)
+
+/// Handler for when we stop being pulled, to remove our proxy link.
 /datum/component/obj_pixel_shift/proc/on_stop_pull(datum/source, atom/movable/was_pulling)
 	SIGNAL_HANDLER
 	unregister_proxy()
@@ -127,6 +146,11 @@
 	SIGNAL_HANDLER
 	if(!isprojectile(mover) && !mover.throwing && passthroughable & border_dir)
 		return COMPONENT_LIVING_PASSABLE
+
+/// Updates our offsets after default anchoring, to reset any tabletop offsets.
+/datum/component/obj_pixel_shift/proc/on_default_wrench(anchored)
+	SIGNAL_HANDLER
+	update_offsets()
 
 /// Activates Pixel Shift on Keybind down. Only Pixel Shift movement will be allowed.
 /datum/component/obj_pixel_shift/proc/pixel_shift_down()
@@ -151,7 +175,6 @@
 	var/obj/obj_parent = parent
 	var/max_horizontal_shift = maximum_pixel_shift + (use_xy ? obj_parent.base_pixel_x : obj_parent.base_pixel_w)
 	var/max_vertical_shift = maximum_pixel_shift + (use_xy ? obj_parent.base_pixel_y : obj_parent.base_pixel_z)
-	// TODO: make it so items with relative_to_initial_offset still can't exceed the tile?
 	switch(direct)
 		if(NORTH)
 			if(pixel_shift_vertical <= max_vertical_shift)
@@ -222,4 +245,5 @@
 		obj_parent.pixel_w = new_w
 		obj_parent.pixel_z = new_z
 
+	var/mob/living/proxy = proxy_ref?.resolve()
 	shift_callback?.Invoke(proxy, obj_parent)
