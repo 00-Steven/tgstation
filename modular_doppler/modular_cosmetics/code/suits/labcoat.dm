@@ -74,7 +74,7 @@
 	name = "scientist's high-neck labcoat"
 	desc = "A somewhat premium labcoat for researchers, featuring a raised collar."
 	icon_state = "/obj/item/clothing/suit/toggle/labcoat/fancy/scientist"
-	greyscale_colors = "#EEEEEE#620B73"
+	greyscale_colors = "#EEEEEE#80ADD6"
 
 /obj/item/clothing/suit/toggle/labcoat/fancy/scientist/Initialize(mapload)
 	. = ..()
@@ -84,7 +84,7 @@
 	name = "research director's high-neck labcoat"
 	desc = "A somewhat premium labcoat for certified Research Directors. It has an extra plastic-latex lining on the outside for more protection from chemical and viral hazards."
 	icon_state = "/obj/item/clothing/suit/toggle/labcoat/fancy/scientist/rd"
-	greyscale_colors = "#620B73#EEEEEE"
+	greyscale_colors = "#335275#E0E8E2"
 	armor_type = /datum/armor/jacket_research_director
 
 /obj/item/clothing/suit/toggle/labcoat/fancy/regular
@@ -107,7 +107,7 @@
 	name = "geneticist's high-neck labcoat"
 	desc = "A somewhat premium labcoat for geneticists, featuring a raised collar."
 	icon_state = "/obj/item/clothing/suit/toggle/labcoat/fancy/geneticist"
-	greyscale_colors = "#EEEEEE#7497C0"
+	greyscale_colors = "#EEEEEE#80ADD6"
 
 /obj/item/clothing/suit/toggle/labcoat/fancy/geneticist/Initialize(mapload)
 	. = ..()
@@ -117,4 +117,4 @@
 	name = "roboticist's high-neck labcoat"
 	desc = "A somewhat premium labcoat for roboticists, featuring a raised collar."
 	icon_state = "/obj/item/clothing/suit/toggle/labcoat/fancy/roboticist"
-	greyscale_colors = "#2F2E31#A52F29"
+	greyscale_colors = "#493E3A#335275"
