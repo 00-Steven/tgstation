@@ -25,6 +25,8 @@
 
 /obj/item/storage/bag/garment/research_director/PopulateContents()
 	. = ..()
+	new /obj/item/clothing/under/rank/rnd/research_director/jumpsuit(src)
+	new /obj/item/clothing/under/rank/rnd/research_director/jumpsuit/skirt(src)
 	new /obj/item/clothing/under/misc/doppler_uniform/science(src)
 	new /obj/item/clothing/neck/doppler_mantle/science(src)
 	new /obj/item/clothing/head/beret/doppler_command/science(src)

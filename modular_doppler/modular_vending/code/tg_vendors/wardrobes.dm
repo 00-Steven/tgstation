@@ -93,6 +93,8 @@
 	)
 
 /obj/machinery/vending/wardrobe/robo_wardrobe
+	icon = 'modular_doppler/modular_vending/icons/tg_vendor_overrides.dmi'
+	icon_state = "robodrobe"
 	products_doppler = list(
 		/obj/item/clothing/suit/toggle/labcoat/fancy/roboticist = 2,
 		/obj/item/clothing/head/beret/science/fancy/robo = 2,
@@ -112,10 +114,15 @@
 	)
 
 /obj/machinery/vending/wardrobe/science_wardrobe
+	icon = 'modular_doppler/modular_vending/icons/tg_vendor_overrides.dmi'
+	icon_state = "scidrobe"
 	products_doppler = list(
+		/obj/item/clothing/under/rank/rnd/scientist_med = 3,
+		/obj/item/clothing/under/rank/rnd/scientist_med/skirt = 3,
 		/obj/item/clothing/under/misc/doppler_uniform/science = 5,
 		/obj/item/clothing/suit/toggle/labcoat/fancy/scientist = 3,
 		/obj/item/clothing/suit/jacket/doppler/departmental_jacket/sci = 3,
+		/obj/item/clothing/head/beret/science/fancy = 3,
 	)
 
 /obj/machinery/vending/wardrobe/sec_wardrobe
@@ -176,6 +183,8 @@
 	)
 
 /obj/machinery/vending/wardrobe/gene_wardrobe
+	icon = 'modular_doppler/modular_vending/icons/tg_vendor_overrides.dmi'
+	icon_state = "genedrobe"
 	products_doppler = list(
 		/obj/item/clothing/suit/toggle/labcoat/fancy/geneticist = 2,
 	)

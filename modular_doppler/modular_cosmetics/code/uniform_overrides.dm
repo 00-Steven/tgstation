@@ -1,7 +1,16 @@
+
+/**
+ * SERVICE
+ */
+
 /datum/outfit/job/janitor
 	uniform = /obj/item/clothing/under/rank/civilian/janitor/doppler
 	suit = /obj/item/clothing/suit/apron/janitor_cloak
 	gloves = /obj/item/clothing/gloves/botanic_leather/janitor
+
+/**
+ * MEDICAL
+ */
 
 /datum/outfit/job/cmo
 	uniform = /obj/item/clothing/under/rank/medical/chief_medical_officer/turtleneck
@@ -20,6 +29,28 @@
 	duffelbag = /obj/item/storage/backpack/duffelbag/paramed
 	belt = /obj/item/storage/belt/medical/paramedic
 
+/**
+ * SCIENCE
+ */
+
+/datum/outfit/job/scientist
+	shoes = /obj/item/clothing/shoes/sneakers/black
+
+/datum/outfit/job/geneticist
+	shoes = /obj/item/clothing/shoes/sneakers/black
+
+/**
+ * CARGO
+ */
+
+/datum/outfit/job/quartermaster
+	uniform = /obj/item/clothing/under/rank/doppler_cargo/tech/turtleneck
+	suit = /obj/item/clothing/suit/jacket/cargo_coat/cargo_greatcoat
+
+/datum/outfit/job/cargo_tech
+	uniform = /obj/item/clothing/under/rank/doppler_cargo/tech
+	suit = /obj/item/clothing/suit/jacket/cargo_coat
+
 /datum/outfit/job/miner
 	suit = /obj/item/clothing/suit/armor/vest/miningjacket
 	ears = /obj/item/radio/headset/headset_frontier_colonist/mining
@@ -29,13 +60,9 @@
 /obj/item/storage/box/survival/mining
 	mask_type = /obj/item/clothing/mask/neck_gaiter
 
-/datum/outfit/job/quartermaster
-	uniform = /obj/item/clothing/under/rank/doppler_cargo/tech/turtleneck
-	suit = /obj/item/clothing/suit/jacket/cargo_coat/cargo_greatcoat
-
-/datum/outfit/job/cargo_tech
-	uniform = /obj/item/clothing/under/rank/doppler_cargo/tech
-	suit = /obj/item/clothing/suit/jacket/cargo_coat
+/**
+ * SECURITY
+ */
 
 /datum/outfit/job/security
 	suit_store = null

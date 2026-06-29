@@ -131,11 +131,12 @@ GLOBAL_LIST_EMPTY(roundstart_station_closets)
 		"Emergency" = list("icon_state" = "emergency"),
 		"Hydroponics" = list("icon_state" = "hydro"),
 		"Medical" = list("icon_state" = "med"),
-		"Science" = list("icon_state" = "rd"),
+		//"Science" = list("icon_state" = "rd"), // DOPPLER EDIT REMOVAL - Science Recolor
 		"Security" = list("icon_state" = "cap"),
 		"Mining" = list("icon_state" = "mining"),
 		"Virology" = list("icon_state" = "bio_viro"),
 		)
+		closet_paint_jobs |= get_modular_paint_jobs() // DOPPLER EDIT ADDITION - Allow Modular Closets
 	if(paint_jobs)
 		paint_jobs = closet_paint_jobs
 
@@ -754,6 +755,7 @@ GLOBAL_LIST_EMPTY(roundstart_station_closets)
 		icon_state = paint_job["icon_state"]
 		base_icon_state = icon_state
 		icon_door = paint_job["icon_door"]
+		icon = paint_job["icon_override"] || paint_job_default_icon // DOPPLER EDIT ADDITION - Allow Modular Closets/Crates
 
 		update_appearance()
 

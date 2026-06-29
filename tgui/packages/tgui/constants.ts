@@ -25,7 +25,7 @@ export const COLORS = {
     captain: '#c06616',
     security: '#e74c3c',
     medbay: '#3498db',
-    science: '#9b59b6',
+    science: '#496f88', // DOPPLER EDIT CHANGE - Science Recolor - Original: science: '#9b59b6',
     engineering: '#f1c40f',
     cargo: '#f39c12',
     service: '#7cc46a',
@@ -131,7 +131,7 @@ export const RADIO_CHANNELS = [
   {
     name: 'Science',
     freq: 1351,
-    color: '#c68cfa',
+    color: '#4889ce', // DOPPLER EDIT CHANGE - Science Recolor - Original: color: '#c68cfa',
   },
   {
     name: 'Command',

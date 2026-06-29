@@ -11,7 +11,7 @@ $department_map: (
   'Security': var(--color-red),
   'Engineering': hsl(from var(--color-orange) h s calc(l + 7.5)),
   'Medical': var(--color-teal),
-  'Science': colors.fg(var(--color-purple)),
+  'Science': hsl(212 44.5% 43.1%), // DOPPLER EDIT CHANGE - Science Recolor - Original: 'Science': colors.fg(var(--color-purple)),
   'Service': var(--color-green),
   'Silicon': var(--color-pink),
 );

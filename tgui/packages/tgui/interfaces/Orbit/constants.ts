@@ -42,7 +42,7 @@ export const DEPARTMENT2COLOR: Record<string, Department> = {
     ],
   },
   science: {
-    color: 'pink',
+    color: 'teal', // DOPPLER EDIT CHANGE - Science Recolor - Original: color: 'pink',
     trims: ['Geneticist', 'Research Director', 'Roboticist', 'Scientist'],
   },
   security: {

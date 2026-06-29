@@ -24,7 +24,7 @@
 #define RADIO_CHANNEL_SCIENCE "Science"
 #define RADIO_KEY_SCIENCE "n"
 #define RADIO_TOKEN_SCIENCE ":n"
-#define RADIO_COLOR_SCIENCE "#c68cfa"
+#define RADIO_COLOR_SCIENCE "#4889ce" // DOPPLER EDIT CHANGE - Science Recolor - Original: #define RADIO_COLOR_SCIENCE "#c68cfa"
 
 #define RADIO_CHANNEL_MEDICAL "Medical"
 #define RADIO_KEY_MEDICAL "m"

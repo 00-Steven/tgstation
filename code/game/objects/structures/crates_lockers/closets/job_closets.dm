@@ -253,7 +253,7 @@
 /obj/structure/closet/wardrobe/genetics_white/PopulateContents()
 	var/static/items_inside = list(
 		/obj/item/clothing/under/rank/rnd/geneticist = 2,
-		/obj/item/clothing/shoes/sneakers/white = 2,
+		/obj/item/clothing/shoes/sneakers/black = 2, // DOPPLER EDIT CHANGE - Science Recolor - Original: /obj/item/clothing/shoes/sneakers/white = 2,
 		/obj/item/clothing/suit/toggle/labcoat/genetics = 2,
 		/obj/item/storage/backpack/genetics = 2,
 		/obj/item/storage/backpack/satchel/gen = 2,
@@ -293,7 +293,7 @@
 		/obj/item/clothing/suit/hooded/wintercoat/science = 1,
 		/obj/item/clothing/under/rank/rnd/scientist = 3,
 		/obj/item/clothing/suit/toggle/labcoat/science = 3,
-		/obj/item/clothing/shoes/sneakers/white = 3,
+		/obj/item/clothing/shoes/sneakers/black = 3, // DOPPLER EDIT CHANGE - Science Recolor - Original: /obj/item/clothing/shoes/sneakers/white = 3,
 		/obj/item/radio/headset/headset_sci = 2,
 		/obj/item/clothing/mask/gas = 3)
 	generate_items_inside(items_inside,src)

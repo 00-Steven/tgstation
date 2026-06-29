@@ -34,7 +34,7 @@ const DEPARTMENT2COLOR = {
   Medical: 'teal',
   Engineering: 'yellow',
   Cargo: 'brown',
-  Science: 'purple',
+  Science: 'teal', // DOPPLER EDIT CHANGE - Science Recolor - Original: Science: 'purple',
   Departures: 'white',
   // Hilbert Research Facility
   Reception: 'white',

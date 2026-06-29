@@ -33,6 +33,8 @@ $_gen_map: (
   'average': var(--color-average),
   'bad': var(--color-bad),
   'label': var(--color-label),
+  'lightscience': hsl(212, 39.3%, 32.9%), // DOPPLER EDIT ADDITION - Science Recolor
+  'darkscience': hsl(194, 61%, 15.1%), // DOPPLER EDIT ADDITION - Science Recolor
 );
 $low-contrast-color-map: ('yellow', 'white');
 

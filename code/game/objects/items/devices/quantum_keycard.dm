@@ -24,7 +24,7 @@
 		/area/station/command = COLOR_COMMAND_BLUE,
 		/area/station/ai_monitored = COLOR_COMMAND_BLUE,
 		/area/station/medical = COLOR_MEDICAL_BLUE,
-		/area/station/science = COLOR_SCIENCE_PINK,
+		/area/station/science = COLOR_SCIENCE_BLUE, // DOPPLER EDIT CHANGE - Science Recolor - Original: /area/station/science = COLOR_SCIENCE_PINK,
 		/area/station/engineering = COLOR_ENGINEERING_ORANGE,
 		/area/station/cargo = COLOR_CARGO_BROWN,
 		/area/mine = COLOR_CARGO_BROWN

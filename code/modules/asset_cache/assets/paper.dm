@@ -9,7 +9,7 @@
 		"stamp-cmo" = 'icons/stamp_icons/large_stamp-cmo.png',
 		"stamp-ce" = 'icons/stamp_icons/large_stamp-ce.png',
 		"stamp-hos" = 'icons/stamp_icons/large_stamp-hos.png',
-		"stamp-rd" = 'icons/stamp_icons/large_stamp-rd.png',
+		"stamp-rd" = 'modular_doppler/misc_department_recolor/icons/stamp_icons/large_stamp-rd.png', // DOPPLER EDIT CHANGE - Science Recolor - Original: "stamp-rd" = 'icons/stamp_icons/large_stamp-rd.png',
 		"stamp-cap" = 'icons/stamp_icons/large_stamp-cap.png',
 		"stamp-qm" = 'icons/stamp_icons/large_stamp-qm.png',
 		"stamp-law" = 'icons/stamp_icons/large_stamp-law.png',

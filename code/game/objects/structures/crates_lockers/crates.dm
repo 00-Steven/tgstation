@@ -62,6 +62,7 @@
 			"Mining" = list("icon_state" = "mining"),
 			"Command" = list("icon_state" = "centcom"),
 		)
+		crate_paint_jobs |= get_modular_paint_jobs() // DOPPLER EDIT ADDITION - Allow Modular Crates
 	if(paint_jobs)
 		paint_jobs = crate_paint_jobs
 	AddComponent(/datum/component/soapbox)
